@@ -1,0 +1,77 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import connectToDatabase from "@/lib/db";
+import Pengajuan from "@/models/Pengajuan";
+import ApprovalLog from "@/models/ApprovalLog";
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+
+    await connectToDatabase();
+
+    const data = await Pengajuan.findById(id).populate("pengusulId", "namaLengkap divisi role");
+    if (!data) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
+
+    const logs = await ApprovalLog.find({ pengajuanId: id })
+      .sort({ createdAt: 1 })
+      .populate("userId", "namaLengkap role");
+
+    const filteredLogs = logs.filter((log: any) => {
+      if (log.tujuanCatatan === 'umum') return true;
+      if (session.user.role === 'ketua') return true;
+      if (session.user.role === 'admin_keuangan' && log.tujuanCatatan === 'admin_keuangan') return true;
+      if (session.user.role === 'user' && log.tujuanCatatan === 'user') return true;
+      return false;
+    });
+
+    return NextResponse.json({ data, logs: filteredLogs }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+
+    const { status, aksi, totalDisetujui, catatanUmum, catatanAdmin, catatanUser } = await req.json();
+
+    await connectToDatabase();
+
+    const pengajuan = await Pengajuan.findById(id);
+    if (!pengajuan) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
+
+    // Update Pengajuan
+    if (status) pengajuan.status = status;
+    if (totalDisetujui !== undefined) pengajuan.totalDisetujui = totalDisetujui;
+    await pengajuan.save();
+
+    // Create Approval Log
+    if (aksi) {
+      const logs = [];
+      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'admin_keuangan' });
+      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'user' });
+      if (catatanUmum) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUmum, tujuanCatatan: 'umum' });
+
+      if (logs.length === 0) {
+        logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, tujuanCatatan: 'umum' });
+      }
+
+      await ApprovalLog.insertMany(logs);
+    }
+
+    return NextResponse.json({ message: "Berhasil diupdate" }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
