@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Pengajuan from "@/models/Pengajuan";
+import Proker from "@/models/Proker";
 import fs from "fs/promises";
 import path from "path";
 
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
     const judul = formData.get("judul") as string;
     const deskripsi = formData.get("deskripsi") as string;
     const rabString = formData.get("rab") as string;
+    const prokerId = formData.get("prokerId") as string | null;
 
     if (!judul || !deskripsi || !rabString) {
       return NextResponse.json({ error: "Data tidak lengkap" }, { status: 400 });
@@ -46,9 +48,20 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    if (prokerId) {
+      const proker = await Proker.findById(prokerId);
+      if (!proker) {
+        return NextResponse.json({ error: "Proker tidak ditemukan" }, { status: 404 });
+      }
+      if (totalNominal > proker.sisaAnggaran) {
+        return NextResponse.json({ error: `Total pengajuan (Rp ${totalNominal.toLocaleString('id-ID')}) melebihi sisa pagu proker (Rp ${proker.sisaAnggaran.toLocaleString('id-ID')})` }, { status: 400 });
+      }
+    }
+
     const newPengajuan = await Pengajuan.create({
       judul,
       deskripsi,
+      prokerId: prokerId || undefined,
       pengusulId: session.user.id,
       totalNominal,
       totalDisetujui: 0,

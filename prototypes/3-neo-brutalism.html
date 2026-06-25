@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neo-Brutalism - KASPRO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Space Grotesk', sans-serif; background-color: #f4f4f0; }</style>
+</head>
+<body class="text-black">
+  <div class="flex h-screen border-4 border-black m-4 rounded-xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
+    <!-- Sidebar -->
+    <aside class="w-64 border-r-4 border-black p-6 bg-[#FFE033] flex flex-col">
+      <div class="font-bold text-3xl tracking-tighter mb-10 border-b-4 border-black pb-4 uppercase">Kaspro</div>
+      <nav class="flex-1 space-y-4">
+        <a href="#" class="block px-4 py-3 bg-white border-2 border-black rounded-lg text-lg font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Dashboard</a>
+        <a href="#" class="block px-4 py-3 text-black border-2 border-transparent hover:border-black rounded-lg text-lg font-bold transition-all">Anggaran</a>
+        <a href="#" class="block px-4 py-3 text-black border-2 border-transparent hover:border-black rounded-lg text-lg font-bold transition-all">Program Kerja</a>
+      </nav>
+    </aside>
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-y-auto bg-white">
+      <header class="flex justify-between items-center mb-10">
+        <h1 class="text-4xl font-bold uppercase tracking-tight">Overview</h1>
+        <button class="bg-[#FF90E8] border-2 border-black px-6 py-3 rounded-lg text-lg font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">TAMBAH TRANSAKSI</button>
+      </header>
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-8 mb-10">
+        <div class="bg-[#33E0FF] p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div class="text-black font-bold uppercase mb-2">Total Saldo</div>
+          <div class="text-4xl font-bold">Rp 45M</div>
+        </div>
+        <div class="bg-[#FF5733] p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div class="text-white font-bold uppercase mb-2">Pengeluaran</div>
+          <div class="text-4xl font-bold text-white">Rp 12.5M</div>
+        </div>
+        <div class="bg-[#B4FF33] p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div class="text-black font-bold uppercase mb-2">Proker Aktif</div>
+          <div class="text-4xl font-bold">8 Pcs</div>
+        </div>
+      </div>
+      <!-- Recent -->
+      <div class="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div class="px-6 py-4 border-b-4 border-black bg-[#E0E0E0] font-bold text-xl uppercase">Transaksi Terkini</div>
+        <div class="p-0">
+          <div class="flex justify-between items-center px-6 py-4 border-b-2 border-black">
+            <div>
+              <div class="font-bold text-xl">Pembelian Alat Tulis</div>
+              <div class="text-gray-700 font-bold">Divisi Humas</div>
+            </div>
+            <div class="font-bold text-2xl">- Rp 450.000</div>
+          </div>
+          <div class="flex justify-between items-center px-6 py-4">
+            <div>
+              <div class="font-bold text-xl">Pencairan Dana Proker A</div>
+              <div class="text-gray-700 font-bold">Divisi Pendidikan</div>
+            </div>
+            <div class="font-bold text-2xl">- Rp 2.500.000</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Pengajuan from "@/models/Pengajuan";
 import ApprovalLog from "@/models/ApprovalLog";
+import Proker from "@/models/Proker";
+import PeriodeAnggaran from "@/models/PeriodeAnggaran";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -50,6 +52,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const pengajuan = await Pengajuan.findById(id);
     if (!pengajuan) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
+
+    // Handle budget deduction on 'Dicairkan'
+    if (status === "Dicairkan" && pengajuan.status !== "Dicairkan") {
+      const deductionAmount = totalDisetujui !== undefined ? Number(totalDisetujui) : Number(pengajuan.totalNominal);
+
+      // Deduct from PeriodeAnggaran Global
+      const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
+      if (activePeriode) {
+        activePeriode.sisaPagu -= deductionAmount;
+        await activePeriode.save();
+      }
+
+      // Deduct from Proker if it exists
+      if (pengajuan.prokerId) {
+        const proker = await Proker.findById(pengajuan.prokerId);
+        if (proker) {
+          proker.sisaAnggaran -= deductionAmount;
+          await proker.save();
+        }
+      }
+    }
 
     // Update Pengajuan
     if (status) pengajuan.status = status;

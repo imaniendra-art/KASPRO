@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist SaaS - KASPRO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
+      <div class="font-bold text-xl tracking-tight mb-8">KASPRO</div>
+      <nav class="flex-1 space-y-2">
+        <a href="#" class="block px-4 py-2 bg-gray-100 rounded-md text-sm font-medium">Dashboard</a>
+        <a href="#" class="block px-4 py-2 text-gray-500 hover:bg-gray-50 rounded-md text-sm">Anggaran</a>
+        <a href="#" class="block px-4 py-2 text-gray-500 hover:bg-gray-50 rounded-md text-sm">Program Kerja</a>
+        <a href="#" class="block px-4 py-2 text-gray-500 hover:bg-gray-50 rounded-md text-sm">Laporan</a>
+      </nav>
+      <div class="mt-auto border-t border-gray-200 pt-4 text-sm text-gray-500">
+        Admin User
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8">
+      <header class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-semibold">Overview</h1>
+        <button class="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition">Tambah Transaksi</button>
+      </header>
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div class="text-sm text-gray-500 mb-1">Total Saldo</div>
+          <div class="text-3xl font-semibold">Rp 45.000.000</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div class="text-sm text-gray-500 mb-1">Pengeluaran Bulan Ini</div>
+          <div class="text-3xl font-semibold text-red-600">Rp 12.500.000</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <div class="text-sm text-gray-500 mb-1">Proker Aktif</div>
+          <div class="text-3xl font-semibold">8 Program</div>
+        </div>
+      </div>
+      <!-- Recent -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200 font-medium">Transaksi Terkini</div>
+        <div class="p-6">
+          <div class="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="font-medium">Pembelian Alat Tulis</div>
+              <div class="text-sm text-gray-500">Divisi Humas</div>
+            </div>
+            <div class="font-medium text-red-600">- Rp 450.000</div>
+          </div>
+          <div class="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="font-medium">Pencairan Dana Proker A</div>
+              <div class="text-sm text-gray-500">Divisi Pendidikan</div>
+            </div>
+            <div class="font-medium text-red-600">- Rp 2.500.000</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
