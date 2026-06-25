@@ -6,7 +6,7 @@ export default function PengajuanBrutalism({ data, isLoading, error, uploadingId
     <div className="p-8">
       <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <Link href="/dashboard" className="inline-block border-[4px] border-black px-4 py-2 font-black uppercase text-xl hover:bg-black hover:text-white transition-colors mb-6 bg-white text-black">
+          <Link href="/dashboard" className="inline-block border-[4px] border-black px-4 py-2 font-black uppercase text-xl hover:bg-black hover:text-[#e5ff00] transition-colors mb-6 bg-white text-black">
             ← KEMBALI KE DASHBOARD
           </Link>
           <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none">Pengajuan</h1>
@@ -15,7 +15,7 @@ export default function PengajuanBrutalism({ data, isLoading, error, uploadingId
         
         <Link 
           href="/pengajuan/baru"
-          className="border-[4px] border-black px-8 py-4 bg-[#ff003c] text-[#ffffff] font-black text-2xl uppercase hover:bg-black transition-colors text-center"
+          className="border-[4px] border-black px-8 py-4 bg-[#ff003c] text-[#ffffff] font-black text-2xl uppercase hover:bg-black hover:text-[#ff003c] transition-colors text-center"
         >
           + BUAT PENGAJUAN BARU
         </Link>
@@ -89,13 +89,13 @@ export default function PengajuanBrutalism({ data, isLoading, error, uploadingId
                           href={item.buktiLpj} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="border-[4px] border-black px-4 py-2 text-sm font-black uppercase bg-white hover:bg-black hover:text-white transition-colors whitespace-nowrap"
+                          className="border-[4px] border-black px-4 py-2 text-sm font-black uppercase bg-white hover:bg-black hover:text-[#e5ff00] transition-colors whitespace-nowrap"
                         >
                           LIHAT BUKTI
                         </a>
                       )}
                       
-                      <Link href={`/pengajuan/${item._id}`} className="border-[4px] border-black px-4 py-2 text-sm font-black uppercase bg-black text-[#ffffff] hover:bg-white hover:text-black transition-colors">
+                      <Link href={`/pengajuan/${item._id}`} className="border-[4px] border-black px-4 py-2 text-sm font-black uppercase bg-black text-[#ffffff] hover:bg-[#e5ff00] hover:text-black transition-colors">
                         DETAIL →
                       </Link>
                     </td>

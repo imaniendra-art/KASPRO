@@ -48,6 +48,7 @@ export default function DetailPengajuan() {
   const [catatanAdmin, setCatatanAdmin] = useState("");
   const [catatanUser, setCatatanUser] = useState("");
   const [nominalDisetujui, setNominalDisetujui] = useState<number>(0);
+  const [potongPaguMaster, setPotongPaguMaster] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAction = async (aksi: string, newStatus: string) => {
@@ -59,7 +60,8 @@ export default function DetailPengajuan() {
         catatanUmum,
         catatanAdmin,
         catatanUser,
-        totalDisetujui: nominalDisetujui || data.data.totalNominal
+        totalDisetujui: nominalDisetujui || data.data.totalNominal,
+        potongPaguMaster
       };
 
       const res = await fetch(`/api/pengajuan/${params.id}`, {
@@ -68,7 +70,10 @@ export default function DetailPengajuan() {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error("Gagal mengupdate");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "Gagal mengupdate");
+      }
       
       queryClient.invalidateQueries({ queryKey: ["pengajuan"] });
       queryClient.invalidateQueries({ queryKey: ["semua_pengajuan"] });
@@ -123,7 +128,7 @@ export default function DetailPengajuan() {
   const p = data.data;
   const logs = data.logs;
 
-  const isAdmin = role === "admin_keuangan";
+  const isAdmin = role === "keuangan";
   const isKetua = role === "ketua";
   const needsAdminAction = isAdmin && p.status === "Review Admin";
   const needsKetuaAction = isKetua && p.status === "Menunggu Ketua";
@@ -137,6 +142,7 @@ export default function DetailPengajuan() {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
+    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti
   };
 

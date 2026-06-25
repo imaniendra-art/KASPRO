@@ -27,20 +27,20 @@ export default function MinimalistLayout({ children }: { children: React.ReactNo
   const navItems = [
     { name: "Dashboard", href: "/dashboard" },
     { name: "Pengajuan Dana", href: "/pengajuan" },
-    ...(session?.user?.role === "admin_keuangan" ? [
-      { name: "Program Kerja", href: "/proker" },
+    { name: "Program Kerja", href: "/proker" },
+    ...(session?.user?.role === "keuangan" ? [
       { name: "Pengaturan", href: "/settings" },
     ] : [])
   ];
 
-  const roleName = session?.user?.role === "admin_keuangan" ? "Admin" : session?.user?.role === "ketua" ? "Ketua" : "User";
+  const roleName = session?.user?.role === "keuangan" ? "Keuangan" : session?.user?.role === "ketua" ? "Ketua" : "Tendik";
 
   return (
     <div className={isDark ? "dark" : ""}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-300 font-sans">
         
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               
               <div className="flex items-center gap-8">
@@ -97,7 +97,7 @@ export default function MinimalistLayout({ children }: { children: React.ReactNo
         </header>
 
         <main className="flex-1">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </div>
         </main>

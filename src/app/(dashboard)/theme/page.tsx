@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Check, Monitor, Layout, Box, Sparkles, Droplet, ArrowLeft } from "lucide-react";
 import ThemeDefault from "@/components/theme/themes/ThemeDefault";
 import ThemeBrutalism from "@/components/theme/themes/ThemeBrutalism";
@@ -9,6 +10,7 @@ import ThemeMinimalist from "@/components/theme/themes/ThemeMinimalist";
 
 export default function ThemeSettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -17,13 +19,17 @@ export default function ThemeSettingsPage() {
 
   if (!mounted) return null;
 
-  const themes = [
+  let themes = [
     { id: "theme-default", name: "Glassmorphism (Default)", icon: Droplet, desc: "Tema premium dengan efek blur dan sidebar." },
     { id: "theme-brutalism", name: "Brutalism", icon: Layout, desc: "Monochrome, font besar, border tebal, tanpa sidebar." },
     { id: "theme-bento", name: "Bento Grid", icon: Box, desc: "Rapi ala Apple dengan kotak bento, tanpa sidebar." },
     { id: "theme-mesh", name: "Gradient Mesh", icon: Sparkles, desc: "Latar belakang warna-warni menyala ala FinTech." },
     { id: "theme-minimalist", name: "Minimalist SaaS", icon: Monitor, desc: "Bersih, cerah, profesional, tanpa sidebar." },
   ];
+
+  if (session?.user?.role === "ketua") {
+    themes = themes.filter(t => t.id === "theme-default" || t.id === "theme-minimalist");
+  }
 
   const props = { theme, setTheme, themes };
 

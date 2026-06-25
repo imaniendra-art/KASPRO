@@ -76,7 +76,7 @@ export default function PengajuanBaruBrutalism(props: any) {
             </div>
             
             <div>
-              <label className="block text-xl font-black uppercase mb-2">Pilih Program Kerja</label>
+              <label className="block text-xl font-black uppercase mb-2">PILIH PENGAJUAN/PERMINTAAN</label>
               <div className="relative">
                 <button
                   type="button"
@@ -84,7 +84,7 @@ export default function PengajuanBaruBrutalism(props: any) {
                   className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none flex justify-between items-center transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                 >
                   <span className="truncate pr-4 uppercase">
-                    {prokerId === "" || !prokerId ? "-- JALUR MANDIRI (TIDAK ADA PROKER) --" : `${selectedProker?.judul} - SISA: RP ${selectedProker?.sisaAnggaran.toLocaleString('id-ID')}`}
+                    {prokerId === "" || !prokerId ? "-- PENGAJUAN / PERMINTAAN BIASA --" : `${selectedProker?.judul} - SISA: RP ${selectedProker?.sisaAnggaran.toLocaleString('id-ID')}`}
                   </span>
                   <span className="text-2xl font-black">↓</span>
                 </button>
@@ -96,7 +96,7 @@ export default function PengajuanBaruBrutalism(props: any) {
                       className="text-left px-6 py-4 hover:bg-[#e5ff00] hover:text-black font-bold text-xl border-b-[4px] border-black transition-colors uppercase"
                       onClick={() => { setProkerId(""); setIsSelectOpen(false); }}
                     >
-                      -- JALUR MANDIRI (TIDAK ADA PROKER) --
+                      -- PENGAJUAN / PERMINTAAN BIASA --
                     </button>
                     {prokers?.map((p: any, idx: number) => (
                       <button

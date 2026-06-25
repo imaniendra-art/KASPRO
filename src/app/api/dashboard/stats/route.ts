@@ -21,9 +21,9 @@ export async function GET(req: Request) {
     const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
     
     // ============================================
-    // USER SPECIFIC DASHBOARD (role === 'user')
+    // USER SPECIFIC DASHBOARD (role === 'tendik')
     // ============================================
-    if (session.user.role === "user") {
+    if (session.user.role === "tendik") {
       const userId = session.user.id;
 
       // 1. Rencana Proker Rp. (Sum of estimasiAnggaran for user's Proker)
@@ -45,12 +45,25 @@ export async function GET(req: Request) {
         { 
           $match: { 
             pengusulId: new mongoose.Types.ObjectId(userId),
-            status: { $in: ["Dicairkan", "Selesai"] }
+            status: { $in: ["Dicairkan", "Selesai"] },
+            prokerId: { $exists: true, $ne: null }
           } 
         },
         { $group: { _id: null, total: { $sum: "$totalDisetujui" } } }
       ]);
       const danaCair = cairAgg.length > 0 ? cairAgg[0].total : 0;
+
+      const nonPaguAgg = await Pengajuan.aggregate([
+        { 
+          $match: { 
+            pengusulId: new mongoose.Types.ObjectId(userId),
+            status: { $in: ["Dicairkan", "Selesai"] },
+            $or: [{ prokerId: { $exists: false } }, { prokerId: null }]
+          } 
+        },
+        { $group: { _id: null, total: { $sum: "$totalDisetujui" } } }
+      ]);
+      const danaCairNonPagu = nonPaguAgg.length > 0 ? nonPaguAgg[0].total : 0;
 
       // 4. Notif Proses (Count of active/pending pengajuan)
       const notifProses = await Pengajuan.countDocuments({
@@ -93,10 +106,11 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         data: {
-          role: "user",
+          role: "tendik",
           rencanaProker,
           totalDiajukan,
           danaCair,
+          danaCairNonPagu,
           notifProses,
           riwayatPengajuan,
           riwayatProker,
@@ -112,11 +126,19 @@ export async function GET(req: Request) {
     // Total Pengeluaran = Total from ALL "Dicairkan" and "Selesai" pengajuan in the system
     // (Or we can filter by activePeriode.createdAt, but let's just use all 'Dicairkan'/'Selesai' for simplicity)
     const pengeluaranDoc = await Pengajuan.aggregate([
-      { $match: { status: { $in: ["Dicairkan", "Selesai"] } } },
+      { $match: { status: { $in: ["Dicairkan", "Selesai"] }, prokerId: { $exists: true, $ne: null } } },
       { $group: { _id: null, total: { $sum: "$totalDisetujui" } } }
     ]);
     
     const totalPengeluaran = pengeluaranDoc.length > 0 ? pengeluaranDoc[0].total : 0;
+
+    // Total Pengeluaran Non-Pagu (Luar Proker)
+    const pengeluaranNonPaguDoc = await Pengajuan.aggregate([
+      { $match: { status: { $in: ["Dicairkan", "Selesai"] }, $or: [{ prokerId: { $exists: false } }, { prokerId: null }] } },
+      { $group: { _id: null, total: { $sum: "$totalDisetujui" } } }
+    ]);
+
+    const totalPengeluaranNonPagu = pengeluaranNonPaguDoc.length > 0 ? pengeluaranNonPaguDoc[0].total : 0;
     
     // If we have an active periode, kas awal is paguMaster, and sisa kas is sisaPagu.
     // If not, we just show 0 to avoid errors.
@@ -134,15 +156,54 @@ export async function GET(req: Request) {
       .sort({ updatedAt: -1 })
       .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User });
 
+    // Get ALL pending lists based on roles
+    let pendingProkerList: any[] = [];
+    if (session.user.role === "keuangan") {
+      pendingProkerList = await Proker.find({ status: "Menunggu Validasi" })
+        .sort({ updatedAt: -1 })
+        .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+        .lean();
+    }
+
+    let pendingPengajuanStatuses: string[] = [];
+    if (session.user.role === "ketua") {
+      pendingPengajuanStatuses = ["Menunggu Ketua"];
+    } else if (session.user.role === "keuangan") {
+      pendingPengajuanStatuses = ["Review Admin", "Disetujui Ketua"];
+    } else {
+      pendingPengajuanStatuses = ["Review Admin", "Menunggu Ketua", "Disetujui Ketua"];
+    }
+
+    const pendingPengajuanList = await Pengajuan.find({ status: { $in: pendingPengajuanStatuses } })
+      .sort({ createdAt: -1 })
+      .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+      .lean();
+
+    // Pengajuan yang sudah upload bukti/LPJ oleh user (status Selesai, ada buktiLpj)
+    let pendingBuktiList: any[] = [];
+    if (session.user.role === "keuangan") {
+      pendingBuktiList = await Pengajuan.find({
+        status: "Selesai",
+        buktiLpj: { $exists: true, $ne: "" }
+      })
+        .sort({ updatedAt: -1 })
+        .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+        .lean();
+    }
+
     return NextResponse.json({
       data: {
         role: session.user.role,
         totalKas,
         sisaKas,
         totalPengeluaran,
-        persentaseTerpakai: Math.round(persentaseTerpakai * 10) / 10, // rounded to 1 decimal
+        totalPengeluaranNonPagu,
+        persentaseTerpakai: Math.round(persentaseTerpakai * 10) / 10,
         recentPengajuan,
-        recentProker
+        recentProker,
+        pendingProkerList,
+        pendingPengajuanList,
+        pendingBuktiList
       }
     }, { status: 200 });
   } catch (error: any) {

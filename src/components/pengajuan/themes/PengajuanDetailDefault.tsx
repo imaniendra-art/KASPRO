@@ -23,6 +23,7 @@ export default function PengajuanDetailDefault(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
+    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti
   } = props;
   
@@ -40,9 +41,16 @@ export default function PengajuanDetailDefault(props: any) {
             <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">ID: {p._id}</p>
           </div>
         </div>
-        <span className={`px-4 py-1.5 rounded-full border font-medium text-sm ${getStatusColor(p.status)}`}>
-          Status: {p.status}
-        </span>
+        <div className="flex items-center gap-3">
+          {['Dicairkan', 'Selesai'].includes(p.status) && (
+            <span className={`px-4 py-1.5 rounded-full border font-medium text-sm ${p.potongPaguMaster ? 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400' : 'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:text-orange-400'}`}>
+              {p.potongPaguMaster ? 'Dana Pagu' : 'Dana Non-Pagu'}
+            </span>
+          )}
+          <span className={`px-4 py-1.5 rounded-full border font-medium text-sm ${getStatusColor(p.status)}`}>
+            Status: {p.status}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -237,6 +245,26 @@ export default function PengajuanDetailDefault(props: any) {
                         />
                       </>
                     )}
+                  </div>
+                )}
+
+                {/* Switch Pagu Master for Admin Keuangan if it's not a proker */}
+                {isAdmin && !p.prokerId && (needsAdminAction || needsCairAction) && (
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Gunakan Dana Pagu Master?</span>
+                      <span className="text-xs text-slate-500 dark:text-gray-400">Pilih 'Ya' untuk memotong saldo utama KASPRO.</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={potongPaguMaster}
+                        onChange={(e) => setPotongPaguMaster(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                      <span className="ml-3 text-sm font-medium text-slate-900 dark:text-gray-300 w-8">{potongPaguMaster ? 'Ya' : 'Tidak'}</span>
+                    </label>
                   </div>
                 )}
 

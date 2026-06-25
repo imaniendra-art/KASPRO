@@ -12,7 +12,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { status, estimasiAnggaran, catatan } = await req.json();
+    const { status, estimasiAnggaran, catatan, judul, deskripsi, rab } = await req.json();
     
     await dbConnect();
 
@@ -23,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     // Validation by Admin / Keuangan
-    if (["Keuangan", "admin_keuangan", "admin", "ketua"].includes(session.user.role)) {
+    if (["keuangan", "ketua"].includes(session.user.role)) {
       if (status === "Divalidasi Keuangan") {
         // Find active periode to ensure we don't exceed Master Pagu
         const periode = await PeriodeAnggaran.findById(proker.periodeId);
@@ -47,13 +47,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       if (catatan !== undefined) {
         proker.catatan = catatan;
       }
+      
+      // Allow Admin to edit RAB per item during validation
+      if (rab !== undefined) {
+        proker.rab = rab;
+      }
     } 
     // Submission by User/Divisi
     else {
       if (status === "Menunggu Validasi" && proker.status === "Draft") {
         proker.status = "Menunggu Validasi";
-      } else if (estimasiAnggaran && proker.status === "Draft") {
-        proker.estimasiAnggaran = Number(estimasiAnggaran);
+      } else if (proker.status === "Draft") {
+        if (estimasiAnggaran !== undefined) proker.estimasiAnggaran = Number(estimasiAnggaran);
+        if (judul !== undefined) proker.judul = judul;
+        if (deskripsi !== undefined) proker.deskripsi = deskripsi;
+        if (rab !== undefined) proker.rab = rab;
       }
     }
 
@@ -80,8 +88,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ error: "Proker tidak ditemukan" }, { status: 404 });
     }
 
-    if (proker.status !== "Draft" && session.user.role !== "Keuangan") {
-      return NextResponse.json({ error: "Hanya draf yang bisa dihapus" }, { status: 400 });
+    if (proker.status !== "Draft" && proker.status !== "Ditolak" && session.user.role !== "keuangan" && session.user.role !== "Keuangan") {
+      return NextResponse.json({ error: "Hanya draf atau proker yang ditolak yang bisa dihapus" }, { status: 400 });
     }
 
     await Proker.findByIdAndDelete(resolvedParams.id);

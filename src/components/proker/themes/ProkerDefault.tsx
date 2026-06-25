@@ -18,7 +18,7 @@ export default function ProkerDefault(props: any) {
     isCreating, setIsCreating,
     judul, setJudul, deskripsi, setDeskripsi,
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
-    submitting, handleCreate, ajukanKeKeuangan, hapusDraft, handleValidasi
+    submitting, handleCreate, ajukanKeKeuangan, hapusDraft, handleValidasi, openEditModal
   } = props;
 
   const [activeModal, setActiveModal] = useState<any>(null);
@@ -54,7 +54,7 @@ export default function ProkerDefault(props: any) {
           <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">Kelola rencana kegiatan dan estimasi anggaran divisi Anda.</p>
         </div>
         
-        {["user", "Tendik"].includes(session?.user?.role) && (
+        {session?.user?.role === "tendik" && (
           <div className="flex gap-3">
             <button 
               onClick={props.kirimSemuaAjuan}
@@ -296,7 +296,7 @@ export default function ProkerDefault(props: any) {
                   <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                     <td className="p-4">
                       <p className="font-medium text-slate-900 dark:text-white">{item.judul}</p>
-                      {["user", "Tendik"].includes(session?.user?.role) === false && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Oleh: {item.pengusulId?.namaLengkap}</p>}
+                      {session?.user?.role === "tendik" === false && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Oleh: {item.pengusulId?.namaLengkap}</p>}
                     </td>
                     <td className="p-4 text-sm text-slate-500 dark:text-gray-400 max-w-xs">
                       <div className="truncate" title={item.deskripsi}>{item.deskripsi}</div>
@@ -328,9 +328,9 @@ export default function ProkerDefault(props: any) {
                       </span>
                     </td>
                     <td className="p-4 text-right flex items-center justify-end gap-3">
-                      {["user", "Tendik"].includes(session?.user?.role) && item.status === "Draft" && (
+                      {session?.user?.role === "tendik" && item.status === "Draft" && (
                         <>
-                          <button onClick={() => alert("Fitur edit akan segera hadir")} className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1">
+                          <button onClick={() => openEditModal(item)} className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1">
                             <Pencil className="w-4 h-4" /> Edit
                           </button>
                           <button onClick={() => hapusDraft(item._id)} className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center gap-1">
@@ -339,7 +339,7 @@ export default function ProkerDefault(props: any) {
                         </>
                       )}
                       
-                      {["Keuangan", "admin_keuangan", "admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
+                      {["keuangan", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
                         <button onClick={() => openValidasiModal(item)} className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors">
                           Validasi Ajuan
                         </button>

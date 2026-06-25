@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function DashboardDefault({ session, stats }: { session: any, stats?: any }) {
-  const isUser = session?.user?.role === "user";
+  const isUser = session?.user?.role === "tendik";
   
   // Modal state
   const [activeModal, setActiveModal] = useState<'pesan' | 'rab' | null>(null);
@@ -20,8 +20,9 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
   };
 
   const adminCards = [
-    { title: "Sisa Pagu", value: `Rp ${stats?.sisaKas?.toLocaleString('id-ID') || "0"}`, icon: Wallet, color: "from-blue-500 to-cyan-500" },
-    { title: "Total Pengeluaran", value: `Rp ${stats?.totalPengeluaran?.toLocaleString('id-ID') || "0"}`, icon: Clock, color: "from-orange-500 to-amber-500" },
+    { title: "Sisa Pagu Master", value: `Rp ${stats?.sisaKas?.toLocaleString('id-ID') || "0"}`, icon: Wallet, color: "from-blue-500 to-cyan-500" },
+    { title: "Total Pengeluaran Proker", value: `Rp ${stats?.totalPengeluaran?.toLocaleString('id-ID') || "0"}`, icon: Clock, color: "from-orange-500 to-amber-500" },
+    { title: "Total Pengeluaran Non-Pagu", value: `Rp ${stats?.totalPengeluaranNonPagu?.toLocaleString('id-ID') || "0"}`, icon: Clock, color: "from-red-500 to-rose-500" },
     { title: "Persentase Terpakai", value: `${stats?.persentaseTerpakai || 0}%`, icon: CheckCircle, color: "from-emerald-500 to-teal-500" },
     { title: "Total Pagu Master", value: `Rp ${stats?.totalKas?.toLocaleString('id-ID') || "0"}`, icon: TrendingUp, color: "from-purple-500 to-pink-500" },
   ];
@@ -29,7 +30,8 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
   const userCards = [
     { title: "Rencana Proker", value: `Rp ${stats?.rencanaProker?.toLocaleString('id-ID') || "0"}`, icon: FileText, color: "from-blue-500 to-cyan-500" },
     { title: "Total Diajukan", value: `Rp ${stats?.totalDiajukan?.toLocaleString('id-ID') || "0"}`, icon: List, color: "from-orange-500 to-amber-500" },
-    { title: "Dana Cair (ACC)", value: `Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-emerald-500 to-teal-500" },
+    { title: "Dana Proker Cair", value: `Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-emerald-500 to-teal-500" },
+    { title: "Dana Non-Pagu Cair", value: `Rp ${stats?.danaCairNonPagu?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-red-500 to-rose-500" },
     { title: "Notif Proses", value: `${stats?.notifProses || 0} Pengajuan`, icon: BellRing, color: "from-purple-500 to-pink-500" },
   ];
 
@@ -47,7 +49,7 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {cardsToRender.map((stat, i) => (
           <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-blue-500/30 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none">
             <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${stat.color} rounded-full blur-[60px] opacity-10 dark:opacity-20 group-hover:opacity-20 dark:group-hover:opacity-40 transition-opacity`}></div>
@@ -224,8 +226,8 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
       ) : (
         /* Notification Cards for Admin */
         <div className="mt-8 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-          {stats?.recentProker && (
-            <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 rounded-[2rem] p-1 shadow-[0_0_40px_rgba(16,185,129,0.3)] group cursor-pointer">
+          {stats?.pendingProkerList?.slice(0, 5).map((proker: any) => (
+            <div key={proker._id} className="relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 rounded-[2rem] p-1 shadow-[0_0_40px_rgba(16,185,129,0.3)] group cursor-pointer">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
               
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-white opacity-20 blur-[50px] rounded-full animate-pulse"></div>
@@ -244,15 +246,15 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                         Validasi Proker
                       </span>
                       <span className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                        {new Date(stats.recentProker.updatedAt || stats.recentProker.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(proker.updatedAt || proker.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
-                      {stats.recentProker.judul}
+                      {proker.judul}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">
-                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{stats.recentProker.pengusulId?.namaLengkap}</span> ({stats.recentProker.pengusulId?.divisi || stats.recentProker.pengusulId?.role}) 
-                      sejumlah estimasi <span className="font-semibold text-emerald-600 dark:text-emerald-400">Rp {stats.recentProker.estimasiAnggaran?.toLocaleString('id-ID')}</span>
+                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{proker.pengusulId?.namaLengkap}</span> ({proker.pengusulId?.divisi || proker.pengusulId?.role}) 
+                      sejumlah estimasi <span className="font-semibold text-emerald-600 dark:text-emerald-400">Rp {proker.estimasiAnggaran?.toLocaleString('id-ID')}</span>
                     </p>
                   </div>
                 </div>
@@ -262,10 +264,10 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                 </Link>
               </div>
             </div>
-          )}
+          ))}
 
-          {stats?.recentPengajuan && (
-            <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 rounded-[2rem] p-1 shadow-[0_0_40px_rgba(59,130,246,0.3)] group cursor-pointer">
+          {stats?.pendingPengajuanList?.slice(0, 5).map((pengajuan: any) => (
+            <div key={pengajuan._id} className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 rounded-[2rem] p-1 shadow-[0_0_40px_rgba(59,130,246,0.3)] group cursor-pointer">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
               
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-white opacity-20 blur-[50px] rounded-full animate-pulse"></div>
@@ -284,25 +286,25 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                         Pengajuan Baru
                       </span>
                       <span className="text-xs font-medium text-slate-500 dark:text-gray-400">
-                        {new Date(stats.recentPengajuan.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(pengajuan.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
-                      {stats.recentPengajuan.judul}
+                      {pengajuan.judul}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">
-                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{stats.recentPengajuan.pengusulId?.namaLengkap}</span> ({stats.recentPengajuan.pengusulId?.divisi || stats.recentPengajuan.pengusulId?.role}) 
-                      sejumlah <span className="font-semibold text-blue-600 dark:text-blue-400">Rp {stats.recentPengajuan.totalNominal?.toLocaleString('id-ID')}</span>
+                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{pengajuan.pengusulId?.namaLengkap}</span> ({pengajuan.pengusulId?.divisi || pengajuan.pengusulId?.role}) 
+                      sejumlah <span className="font-semibold text-blue-600 dark:text-blue-400">Rp {pengajuan.totalNominal?.toLocaleString('id-ID')}</span>
                     </p>
                   </div>
                 </div>
   
-                <Link href="/pengajuan" className="flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-gray-100 px-6 py-3.5 rounded-xl font-semibold transition-colors w-full md:w-auto shrink-0 shadow-lg">
-                  Lihat Detail <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Link href={`/pengajuan/${pengajuan._id}`} className="flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-gray-100 px-6 py-3.5 rounded-xl font-semibold transition-colors w-full md:w-auto shrink-0 shadow-lg">
+                  Tinjau Sekarang <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             </div>
-          )}
+          ))}
         </div>
       )}
 

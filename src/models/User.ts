@@ -5,7 +5,7 @@ export interface IUser extends Document {
   password?: string; // Hashed password
   namaLengkap: string;
   divisi: string;
-  role: 'user' | 'admin_keuangan' | 'wk2_keuangan' | 'ketua';
+  role: 'tendik' | 'keuangan' | 'ketua';
 }
 
 const UserSchema: Schema = new Schema({
@@ -16,8 +16,8 @@ const UserSchema: Schema = new Schema({
   role: { 
     type: String, 
     required: true, 
-    enum: ['user', 'admin_keuangan', 'wk2_keuangan', 'ketua'],
-    default: 'user'
+    enum: ['tendik', 'keuangan', 'ketua'],
+    default: 'tendik'
   }
 }, { timestamps: true });
 

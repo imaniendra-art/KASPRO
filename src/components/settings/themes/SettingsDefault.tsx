@@ -26,7 +26,7 @@ export default function SettingsDefault(props: any) {
         <p className="text-slate-500 dark:text-gray-400 mt-1">Kelola preferensi dan sistem anggaran.</p>
       </div>
 
-      {session?.user?.role === "admin_keuangan" && (
+      {session?.user?.role === "keuangan" && (
         <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md shadow-sm dark:shadow-none">
           <div className="flex justify-between items-center mb-6">
             <div>

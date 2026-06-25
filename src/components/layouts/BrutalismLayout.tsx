@@ -8,13 +8,13 @@ import { Palette, LogOut } from "lucide-react";
 export default function BrutalismLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const userRole = session?.user?.role || "user";
+  const userRole = session?.user?.role || "tendik";
 
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", roles: ["user", "admin_keuangan", "wk2_keuangan", "ketua"] },
-    { name: "Program Kerja", href: "/proker", roles: ["user", "admin_keuangan", "wk2_keuangan", "ketua"] },
-    { name: "Pengajuan Dana", href: "/pengajuan", roles: ["user", "admin_keuangan", "wk2_keuangan", "ketua"] },
-    { name: "Pengaturan Sistem", href: "/settings", roles: ["admin_keuangan"] },
+    { name: "Dashboard", href: "/dashboard", roles: ["tendik", "keuangan", "ketua"] },
+    { name: "Program Kerja", href: "/proker", roles: ["tendik", "keuangan", "ketua"] },
+    { name: "Pengajuan Dana", href: "/pengajuan", roles: ["tendik", "keuangan", "ketua"] },
+    { name: "Pengaturan Sistem", href: "/settings", roles: ["keuangan"] },
   ];
 
   const filteredMenus = menuItems.filter(item => item.roles.includes(userRole));

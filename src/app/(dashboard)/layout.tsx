@@ -19,12 +19,18 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (session?.user?.role === "ketua") {
+      const currentTheme = localStorage.getItem("theme");
+      if (!currentTheme || currentTheme === "system" || (currentTheme !== "theme-minimalist" && currentTheme !== "theme-default")) {
+        setTheme("theme-minimalist");
+      }
+    }
+  }, [session, setTheme]);
 
   if (status === "loading") {
     return (

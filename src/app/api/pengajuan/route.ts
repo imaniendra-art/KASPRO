@@ -87,7 +87,7 @@ export async function GET(req: Request) {
 
     let query = {};
     // Jika role user, hanya ambil miliknya. Jika admin/ketua, ambil semua (bisa ditambah filter nanti).
-    if (session.user.role === "user") {
+    if (session.user.role === "tendik") {
       query = { pengusulId: session.user.id };
     }
 

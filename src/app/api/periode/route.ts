@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized: Session is null" }, { status: 401 });
     }
-    if (session.user.role !== "admin_keuangan") {
+    if (!session.user.role === "keuangan") {
       return NextResponse.json({ error: `Unauthorized: Your role is ${session.user.role}` }, { status: 401 });
     }
 

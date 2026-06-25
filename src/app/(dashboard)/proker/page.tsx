@@ -28,6 +28,7 @@ export default function DaftarProker() {
   const [deskripsi, setDeskripsi] = useState("");
   const [rab, setRab] = useState<any[]>([{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["proker"],
@@ -53,19 +54,39 @@ export default function DaftarProker() {
     }
   };
 
+  const openEditModal = (item: any) => {
+    setEditingId(item._id);
+    setJudul(item.judul);
+    setDeskripsi(item.deskripsi || "");
+    setRab(item.rab && item.rab.length > 0 ? item.rab : [{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
+    setIsCreating(true);
+  };
+
+  const closeForm = () => {
+    setIsCreating(false);
+    setEditingId(null);
+    setJudul("");
+    setDeskripsi("");
+    setRab([{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/proker", {
-        method: "POST",
+      const url = editingId ? `/api/proker/${editingId}` : "/api/proker";
+      const method = editingId ? "PATCH" : "POST";
+      
+      // Hitung ulang estimasi anggaran total
+      const totalEstimasi = rab.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ judul, deskripsi, rab })
+        body: JSON.stringify({ judul, deskripsi, rab, estimasiAnggaran: totalEstimasi })
       });
       if (!res.ok) throw new Error((await res.json()).error);
-      setIsCreating(false);
-      setJudul(""); setDeskripsi(""); 
-      setRab([{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
+      closeForm();
       queryClient.invalidateQueries({ queryKey: ["proker"] });
     } catch (err: any) {
       alert(err.message);
@@ -115,19 +136,20 @@ export default function DaftarProker() {
     if (!confirm("Hapus draf proker ini?")) return;
     try {
       const res = await fetch(`/api/proker/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Gagal menghapus");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gagal menghapus");
       queryClient.invalidateQueries({ queryKey: ["proker"] });
     } catch (err: any) {
       alert(err.message);
     }
   };
 
-  const handleValidasi = async (id: string, status: string, estimasiAnggaran: number, catatan: string) => {
+  const handleValidasi = async (id: string, status: string, estimasiAnggaran: number, catatan: string, rab?: any[]) => {
     try {
       const res = await fetch(`/api/proker/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, estimasiAnggaran, catatan })
+        body: JSON.stringify({ status, estimasiAnggaran, catatan, rab })
       });
       if (!res.ok) throw new Error("Gagal memvalidasi proker");
       queryClient.invalidateQueries({ queryKey: ["proker"] });
@@ -144,7 +166,7 @@ export default function DaftarProker() {
     isCreating, setIsCreating,
     judul, setJudul, deskripsi, setDeskripsi, 
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
-    submitting, handleCreate, ajukanKeKeuangan, kirimSemuaAjuan, hapusDraft, handleValidasi
+    submitting, handleCreate, ajukanKeKeuangan, kirimSemuaAjuan, hapusDraft, handleValidasi, openEditModal
   };
 
   if (theme === "theme-brutalism") {

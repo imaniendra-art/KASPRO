@@ -20,6 +20,7 @@ export interface IPengajuan extends Document {
   status: 'Review Admin' | 'Menunggu Ketua' | 'Disetujui Ketua' | 'Dicairkan' | 'Ditolak' | 'Selesai';
   rab: IRabItem[];
   buktiLpj?: string;
+  potongPaguMaster?: boolean;
 }
 
 const RabItemSchema = new Schema<IRabItem>({
@@ -46,6 +47,7 @@ const PengajuanSchema: Schema = new Schema({
     default: 'Review Admin'
   },
   buktiLpj: { type: String },
+  potongPaguMaster: { type: Boolean, default: true },
   rab: [RabItemSchema]
 }, { timestamps: true });
 

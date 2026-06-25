@@ -11,6 +11,7 @@ export default function PengajuanDetailBrutalism(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
+    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti
   } = props;
   
@@ -25,9 +26,16 @@ export default function PengajuanDetailBrutalism(props: any) {
         <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-4">Detail</h1>
         <div className="flex flex-wrap items-center gap-4">
           <p className="text-xl font-bold uppercase tracking-widest bg-black text-[#ffffff] px-4 py-1 border-[4px] border-black inline-block">ID: {p._id}</p>
-          <span className="px-4 py-1 border-[4px] border-black font-black text-xl uppercase bg-[#e5ff00] text-black">
-            STATUS: {p.status}
-          </span>
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
+            {['Dicairkan', 'Selesai'].includes(p.status) && (
+              <span className={`px-6 py-3 border-[4px] border-black font-black text-xl uppercase shadow-[4px_4px_0_0_#000] ${p.potongPaguMaster ? 'bg-[#ff00ff] text-white' : 'bg-[#ff8800] text-black'}`}>
+                {p.potongPaguMaster ? 'DANA PAGU' : 'DANA NON-PAGU'}
+              </span>
+            )}
+            <span className="bg-[#e5ff00] px-6 py-3 border-[4px] border-black font-black text-xl uppercase shadow-[4px_4px_0_0_#000]">
+              STATUS: {p.status}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -219,6 +227,22 @@ export default function PengajuanDetailBrutalism(props: any) {
                         />
                       </>
                     )}
+                  </div>
+                )}
+
+                {/* Checkbox Pagu Master for Admin Keuangan if it's not a proker */}
+                {isAdmin && !p.prokerId && (needsAdminAction || needsCairAction) && (
+                  <div className="flex items-center gap-3 p-4 border-[4px] border-black bg-white">
+                    <input 
+                      type="checkbox" 
+                      id="potongPagu"
+                      checked={potongPaguMaster}
+                      onChange={(e) => setPotongPaguMaster(e.target.checked)}
+                      className="w-6 h-6 border-[4px] border-black appearance-none bg-white checked:bg-black cursor-pointer relative"
+                    />
+                    <label htmlFor="potongPagu" className="font-black uppercase text-sm cursor-pointer select-none flex-1">
+                      AMBIL DANA DARI PAGU MASTER KASPRO? <span className="text-[#ff003c]">({potongPaguMaster ? 'YA' : 'TIDAK'})</span>
+                    </label>
                   </div>
                 )}
 

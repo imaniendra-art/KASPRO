@@ -22,7 +22,7 @@ export default function SettingsBrutalism(props: any) {
         <p className="text-xl font-bold uppercase tracking-widest mt-4">PENGATURAN & PERIODE</p>
       </div>
 
-      {session?.user?.role === "admin_keuangan" && (
+      {session?.user?.role === "keuangan" && (
         <div className="bg-white border-[4px] border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b-[4px] border-black pb-4">
             <h2 className="text-3xl font-black uppercase">PERIODE & PAGU GLOBAL</h2>

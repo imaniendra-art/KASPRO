@@ -44,21 +44,29 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        let r = user.role;
+        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan") r = "keuangan";
+        if (r === "user" || r === "Tendik") r = "tendik";
+
         token.id = user.id;
         token.username = user.username;
         token.namaLengkap = user.namaLengkap;
-        token.role = user.role;
+        token.role = r;
         token.divisi = user.divisi;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
+        let r = token.role as string;
+        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan") r = "keuangan";
+        if (r === "user" || r === "Tendik") r = "tendik";
+        
         session.user = {
           id: token.id as string,
           username: token.username as string,
           namaLengkap: token.namaLengkap as string,
-          role: token.role as string,
+          role: r,
           divisi: token.divisi as string,
         };
       }

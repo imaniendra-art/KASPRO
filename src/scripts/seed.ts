@@ -28,14 +28,14 @@ async function seed() {
         password: passwordHash,
         namaLengkap: "Staf Tendik (User)",
         divisi: "Tendik",
-        role: "user",
+        role: "tendik",
       },
       {
         username: "keuangan",
         password: passwordHash,
         namaLengkap: "Admin Keuangan",
         divisi: "Keuangan",
-        role: "admin_keuangan",
+        role: "keuangan",
       },
       {
         username: "ketua",

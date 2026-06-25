@@ -18,7 +18,7 @@ export default function SettingsMinimalist(props: any) {
         <p className="text-gray-500 dark:text-gray-400 mt-1">Kelola preferensi dan sistem anggaran.</p>
       </div>
 
-      {session?.user?.role === "admin_keuangan" && (
+      {session?.user?.role === "keuangan" && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <div>

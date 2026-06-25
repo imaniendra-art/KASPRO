@@ -27,8 +27,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const filteredLogs = logs.filter((log: any) => {
       if (log.tujuanCatatan === 'umum') return true;
       if (session.user.role === 'ketua') return true;
-      if (session.user.role === 'admin_keuangan' && log.tujuanCatatan === 'admin_keuangan') return true;
-      if (session.user.role === 'user' && log.tujuanCatatan === 'user') return true;
+      if (session.user.role === 'keuangan' && log.tujuanCatatan === 'keuangan') return true;
+      if (session.user.role === 'tendik' && log.tujuanCatatan === 'tendik') return true;
       return false;
     });
 
@@ -46,7 +46,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    const { status, aksi, totalDisetujui, catatanUmum, catatanAdmin, catatanUser } = await req.json();
+    const { status, aksi, totalDisetujui, catatanUmum, catatanAdmin, catatanUser, potongPaguMaster } = await req.json();
 
     await connectToDatabase();
 
@@ -57,11 +57,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (status === "Dicairkan" && pengajuan.status !== "Dicairkan") {
       const deductionAmount = totalDisetujui !== undefined ? Number(totalDisetujui) : Number(pengajuan.totalNominal);
 
-      // Deduct from PeriodeAnggaran Global
-      const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
-      if (activePeriode) {
-        activePeriode.sisaPagu -= deductionAmount;
-        await activePeriode.save();
+      // Deduct from PeriodeAnggaran Global (if potongPaguMaster is true or undefined/default true)
+      // For Proker, we usually always want to deduct Pagu Master.
+      // But we will respect the frontend's choice if passed.
+      const shouldDeductPagu = potongPaguMaster !== false;
+
+      if (shouldDeductPagu) {
+        const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
+        if (activePeriode) {
+          activePeriode.sisaPagu -= deductionAmount;
+          await activePeriode.save();
+        }
       }
 
       // Deduct from Proker if it exists
@@ -77,13 +83,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     // Update Pengajuan
     if (status) pengajuan.status = status;
     if (totalDisetujui !== undefined) pengajuan.totalDisetujui = totalDisetujui;
+    if (potongPaguMaster !== undefined) pengajuan.potongPaguMaster = potongPaguMaster;
     await pengajuan.save();
 
     // Create Approval Log
     if (aksi) {
       const logs = [];
-      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'admin_keuangan' });
-      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'user' });
+      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'keuangan' });
+      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'tendik' });
       if (catatanUmum) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUmum, tujuanCatatan: 'umum' });
 
       if (logs.length === 0) {
