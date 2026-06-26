@@ -22,8 +22,7 @@ export default function ThemeSettingsPage() {
   let themes = [
     { id: "theme-default", name: "Glassmorphism (Default)", icon: Droplet, desc: "Tema premium dengan efek blur dan sidebar." },
     { id: "theme-brutalism", name: "Brutalism", icon: Layout, desc: "Monochrome, font besar, border tebal, tanpa sidebar." },
-    { id: "theme-bento", name: "Bento Grid", icon: Box, desc: "Rapi ala Apple dengan kotak bento, tanpa sidebar." },
-    { id: "theme-mesh", name: "Gradient Mesh", icon: Sparkles, desc: "Latar belakang warna-warni menyala ala FinTech." },
+
     { id: "theme-minimalist", name: "Minimalist SaaS", icon: Monitor, desc: "Bersih, cerah, profesional, tanpa sidebar." },
   ];
 

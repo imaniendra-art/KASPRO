@@ -6,6 +6,7 @@ import Pengajuan from "@/models/Pengajuan";
 import ApprovalLog from "@/models/ApprovalLog";
 import Proker from "@/models/Proker";
 import PeriodeAnggaran from "@/models/PeriodeAnggaran";
+import Unit from "@/models/Unit";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,7 +18,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     await connectToDatabase();
 
-    const data = await Pengajuan.findById(id).populate("pengusulId", "namaLengkap divisi role");
+    const data = await Pengajuan.findById(id).populate({
+      path: "pengusulId",
+      select: "namaLengkap divisi role unitId",
+      populate: { path: "unitId", select: "namaUnit" }
+    });
     if (!data) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
 
     const logs = await ApprovalLog.find({ pengajuanId: id })
@@ -27,8 +32,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const filteredLogs = logs.filter((log: any) => {
       if (log.tujuanCatatan === 'umum') return true;
       if (session.user.role === 'ketua') return true;
-      if (session.user.role === 'keuangan' && log.tujuanCatatan === 'keuangan') return true;
-      if (session.user.role === 'tendik' && log.tujuanCatatan === 'tendik') return true;
+      if (session.user.role === 'admin' && log.tujuanCatatan === 'admin') return true;
+      if (session.user.role === 'user' && log.tujuanCatatan === 'user') return true;
       return false;
     });
 
@@ -89,8 +94,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     // Create Approval Log
     if (aksi) {
       const logs = [];
-      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'keuangan' });
-      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'tendik' });
+      // Create logs based on notes provided
+      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'admin' });
+      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'user' });
       if (catatanUmum) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUmum, tujuanCatatan: 'umum' });
 
       if (logs.length === 0) {

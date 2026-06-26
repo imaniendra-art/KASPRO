@@ -1,18 +1,20 @@
 import Link from "next/link";
-import { Plus, Loader2, FileText } from "lucide-react";
+import { Plus, Loader2, FileText, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-export default function PengajuanMinimalist({ data, isLoading, error }: any) {
+export default function PengajuanMinimalist({ data, isLoading, error, uploadingId, handleUploadBukti }: any) {
   const { data: session } = useSession();
+  const isUser = session?.user?.role === "user";
   const isKetua = session?.user?.role === "ketua";
+  const isAdmin = session?.user?.role === "admin";
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{isKetua ? "Daftar Pengajuan Dana" : "Pengajuan Dana"}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{(isKetua || isAdmin) ? "Daftar Pengajuan Dana" : "Pengajuan Dana"}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Daftar permintaan dana yang diajukan.</p>
         </div>
-        {!isKetua && (
+        {isUser && (
           <Link href="/pengajuan/baru" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium">
             <Plus className="w-4 h-4" /> Buat Pengajuan
           </Link>
@@ -24,7 +26,7 @@ export default function PengajuanMinimalist({ data, isLoading, error }: any) {
           <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
         ) : error ? (
           <div className="p-12 text-center text-red-500">{error}</div>
-        ) : data?.length === 0 ? (
+        ) : (!data || data.length === 0) ? (
           <div className="p-12 text-center text-gray-500 dark:text-gray-400">Belum ada pengajuan.</div>
         ) : (
           <table className="w-full text-left text-sm whitespace-nowrap">
@@ -42,7 +44,9 @@ export default function PengajuanMinimalist({ data, isLoading, error }: any) {
               {data.map((item: any) => (
                 <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="p-4 font-medium text-gray-900 dark:text-gray-100 truncate max-w-[250px]" title={item.judul}>{item.judul}</td>
-                  <td className="p-4 text-gray-500 dark:text-gray-400">{item.pengusulId?.namaLengkap}</td>
+                  <td className="p-4 text-gray-500 dark:text-gray-400">
+                    {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"})
+                  </td>
                   <td className="p-4 font-medium text-gray-900 dark:text-gray-100">Rp {item.totalNominal?.toLocaleString('id-ID')}</td>
                   <td className="p-4">
                     <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
@@ -58,10 +62,31 @@ export default function PengajuanMinimalist({ data, isLoading, error }: any) {
                       <span className="text-gray-300 dark:text-gray-600">-</span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 flex items-center gap-3">
                     <Link href={`/pengajuan/${item._id}`} className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
                       Detail
                     </Link>
+                    {(item.status === 'Dicairkan' || item.status === 'Selesai') && (
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="file"
+                          id={`bukti-${item._id}`}
+                          className="hidden"
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleUploadBukti(item._id, e.target.files?.[0] || null)}
+                          disabled={uploadingId === item._id}
+                        />
+                        <label
+                          htmlFor={`bukti-${item._id}`}
+                          className={`cursor-pointer text-sm font-medium flex items-center gap-1 transition-colors ${
+                            uploadingId === item._id ? 'text-gray-400' : 'text-emerald-600 hover:text-emerald-500'
+                          }`}
+                          title="Upload Bukti LPJ"
+                        >
+                          {uploadingId === item._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        </label>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

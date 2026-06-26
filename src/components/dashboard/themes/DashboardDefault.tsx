@@ -2,8 +2,61 @@ import { Wallet, TrendingUp, CheckCircle, Clock, BellRing, ArrowRight, FileText,
 import Link from "next/link";
 import { useState } from "react";
 
+const formatWaktuPelaksanaan = (waktuStr: string) => {
+  if (!waktuStr) return <span className="text-slate-400">-</span>;
+  
+  const parts = waktuStr.split(",");
+  
+  const startDate = new Date(parts[0]);
+  if (isNaN(startDate.getTime())) {
+    return <span>{waktuStr}</span>;
+  }
+  
+  const endDate = parts[1] ? new Date(parts[1]) : null;
+  
+  const formatDate = (d: Date) => d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const displayStr = endDate && endDate.getTime() !== startDate.getTime()
+    ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+    : formatDate(startDate);
+    
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  const start = new Date(startDate);
+  start.setHours(0,0,0,0);
+  
+  const end = endDate ? new Date(endDate) : new Date(startDate);
+  end.setHours(0,0,0,0);
+  
+  let countdownText = "";
+  let badgeColor = "";
+  
+  if (today.getTime() < start.getTime()) {
+    const diffTime = start.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    countdownText = `H-${diffDays} Hari`;
+    badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30";
+  } else if (today.getTime() >= start.getTime() && today.getTime() <= end.getTime()) {
+    countdownText = "Sedang Berjalan";
+    badgeColor = "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30";
+  } else {
+    countdownText = `Selesai`;
+    badgeColor = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 items-start">
+      <span className="font-medium text-slate-800 dark:text-slate-200">{displayStr}</span>
+      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${badgeColor}`}>
+        {countdownText}
+      </span>
+    </div>
+  );
+};
+
 export default function DashboardDefault({ session, stats }: { session: any, stats?: any }) {
-  const isUser = session?.user?.role === "tendik";
+  const isUser = session?.user?.role === "user";
+  const isAdmin = session?.user?.role === "admin";
   
   // Modal state
   const [activeModal, setActiveModal] = useState<'pesan' | 'rab' | null>(null);
@@ -114,15 +167,18 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                 <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-gray-400">
                   <tr>
                     <th className="p-4 rounded-l-xl font-semibold">Program Kerja</th>
+                    <th className="p-4 font-semibold">Rencana Pelaksanaan</th>
                     <th className="p-4 font-semibold text-right">Estimasi Awal</th>
                     <th className="p-4 font-semibold text-right">Sisa Pagu (Valid)</th>
-                    <th className="p-4 rounded-r-xl font-semibold">Status</th>
+                    <th className="p-4 font-semibold">Status</th>
+                    <th className="p-4 rounded-r-xl font-semibold text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {stats?.riwayatProker?.map((proker: any) => (
                     <tr key={proker._id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
                       <td className="p-4 font-medium text-slate-900 dark:text-white">{proker.judul}</td>
+                      <td className="p-4 align-top">{formatWaktuPelaksanaan(proker.waktuPelaksanaan)}</td>
                       <td className="p-4 text-right text-slate-500 dark:text-gray-400">Rp {proker.estimasiAnggaran?.toLocaleString('id-ID')}</td>
                       <td className="p-4 text-right font-semibold text-blue-600 dark:text-blue-400">Rp {proker.sisaAnggaran?.toLocaleString('id-ID')}</td>
                       <td className="p-4">
@@ -133,6 +189,18 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                         >
                           {proker.status}
                         </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {proker.status === 'Divalidasi Keuangan' ? (
+                          <Link 
+                            href={`/pengajuan/baru?prokerId=${proker._id}`}
+                            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm hover:shadow"
+                          >
+                            Ajukan Anggaran
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400 dark:text-gray-500 text-xs">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -253,7 +321,12 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                       {proker.judul}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">
-                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{proker.pengusulId?.namaLengkap}</span> ({proker.pengusulId?.divisi || proker.pengusulId?.role}) 
+                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{proker.pengusulId?.namaLengkap}</span> {
+                        (() => {
+                          const info = proker.pengusulId?.unitId?.namaUnit || (proker.pengusulId?.divisi && proker.pengusulId.divisi !== "-" ? proker.pengusulId.divisi : null) || proker.pengusulId?.role;
+                          return info ? `(${info})` : "";
+                        })()
+                      }
                       sejumlah estimasi <span className="font-semibold text-emerald-600 dark:text-emerald-400">Rp {proker.estimasiAnggaran?.toLocaleString('id-ID')}</span>
                     </p>
                   </div>
@@ -293,7 +366,12 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                       {pengajuan.judul}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">
-                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{pengajuan.pengusulId?.namaLengkap}</span> ({pengajuan.pengusulId?.divisi || pengajuan.pengusulId?.role}) 
+                      Diajukan oleh <span className="font-semibold text-slate-900 dark:text-white">{pengajuan.pengusulId?.namaLengkap}</span> {
+                        (() => {
+                          const info = pengajuan.pengusulId?.unitId?.namaUnit || (pengajuan.pengusulId?.divisi && pengajuan.pengusulId.divisi !== "-" ? pengajuan.pengusulId.divisi : null) || pengajuan.pengusulId?.role;
+                          return info ? `(${info})` : "";
+                        })()
+                      }
                       sejumlah <span className="font-semibold text-blue-600 dark:text-blue-400">Rp {pengajuan.totalNominal?.toLocaleString('id-ID')}</span>
                     </p>
                   </div>

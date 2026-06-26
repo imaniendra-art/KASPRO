@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Proker from "@/models/Proker";
+import Unit from "@/models/Unit";
 import PeriodeAnggaran from "@/models/PeriodeAnggaran";
 
 export async function GET(req: Request) {
@@ -17,18 +18,23 @@ export async function GET(req: Request) {
     // Find active periode
     const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
     
-    // If Admin/Keuangan/Ketua, they can see all prokers (maybe filtered by period)
-    // If Tendik (Divisi), they only see their own prokers
-    let filter: any = {};
-    if (activePeriode) {
-      filter.periodeId = activePeriode._id;
+    // If Admin/Ketua, they can see all prokers (maybe filtered by period)
+    // If User, they only see their own prokers
+    let query: any = {};
+    const { searchParams } = new URL(req.url);
+    const periodeId = searchParams.get("periodeId");
+    
+    if (periodeId) {
+      query.periodeId = periodeId;
+    } else if (activePeriode) {
+      query.periodeId = activePeriode._id;
     }
     
-    if (session.user.role === "Tendik") {
-      filter.pengusulId = session.user.id;
+    if (session.user.role === "user") {
+      query.pengusulId = session.user.id;
     }
 
-    const prokers = await Proker.find(filter).populate("pengusulId", "namaLengkap").sort({ createdAt: -1 });
+    const prokers = await Proker.find(query).populate({ path: "pengusulId", select: "namaLengkap divisi role unitId", populate: { path: "unitId", select: "namaUnit" } }).sort({ createdAt: -1 });
 
     return NextResponse.json({ data: prokers }, { status: 200 });
   } catch (error: any) {
@@ -43,7 +49,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { judul, deskripsi, rab } = await req.json();
+    const { judul, deskripsi, capaian, baseLine, target, waktuPelaksanaan, sasaran, pesertaMitra, rab } = await req.json();
 
     if (!judul || !deskripsi || !rab || !Array.isArray(rab) || rab.length === 0) {
       return NextResponse.json({ error: "Judul, deskripsi, dan RAB minimal 1 item wajib diisi" }, { status: 400 });
@@ -57,12 +63,18 @@ export async function POST(req: Request) {
     // Check for active period
     const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
     if (!activePeriode) {
-      return NextResponse.json({ error: "Tidak ada Periode Anggaran yang aktif. Harap hubungi Keuangan." }, { status: 400 });
+      return NextResponse.json({ error: "Tidak ada Periode Anggaran yang aktif. Harap hubungi Admin." }, { status: 400 });
     }
 
     const proker = new Proker({
       judul,
       deskripsi,
+      capaian: capaian || '',
+      baseLine: Number(baseLine) || 0,
+      target: Number(target) || 0,
+      waktuPelaksanaan: waktuPelaksanaan || '',
+      sasaran: sasaran || '',
+      pesertaMitra: pesertaMitra || '',
       estimasiAnggaran: Number(estimasiAnggaran),
       rab,
       sisaAnggaran: 0, // 0 until validated

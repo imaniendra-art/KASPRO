@@ -8,8 +8,7 @@ import { useTheme } from "next-themes";
 
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import BrutalismLayout from "@/components/layouts/BrutalismLayout";
-import BentoLayout from "@/components/layouts/BentoLayout";
-import MeshLayout from "@/components/layouts/MeshLayout";
+
 import MinimalistLayout from "@/components/layouts/MinimalistLayout";
 
 export default function DashboardLayout({
@@ -24,13 +23,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     setMounted(true);
-    if (session?.user?.role === "ketua") {
-      const currentTheme = localStorage.getItem("theme");
-      if (!currentTheme || currentTheme === "system" || (currentTheme !== "theme-minimalist" && currentTheme !== "theme-default")) {
-        setTheme("theme-minimalist");
-      }
-    }
-  }, [session, setTheme]);
+  }, []);
 
   if (status === "loading") {
     return (
@@ -52,10 +45,7 @@ export default function DashboardLayout({
   switch (theme) {
     case "theme-brutalism":
       return <BrutalismLayout>{children}</BrutalismLayout>;
-    case "theme-bento":
-      return <BentoLayout>{children}</BentoLayout>;
-    case "theme-mesh":
-      return <MeshLayout>{children}</MeshLayout>;
+
     case "theme-minimalist":
       return <MinimalistLayout>{children}</MinimalistLayout>;
     default:

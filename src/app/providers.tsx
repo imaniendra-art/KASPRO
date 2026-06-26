@@ -11,7 +11,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem themes={['light', 'dark', 'theme-default', 'theme-brutalism', 'theme-bento', 'theme-mesh', 'theme-minimalist']}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem themes={['light', 'dark', 'theme-default', 'theme-brutalism', 'theme-minimalist']}>
           {children}
         </ThemeProvider>
       </QueryClientProvider>

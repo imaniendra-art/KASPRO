@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, FileText, Loader2, Upload, ArrowLeft } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -14,22 +15,29 @@ const getStatusColor = (status: string) => {
 };
 
 export default function PengajuanDefault({ data, isLoading, error, uploadingId, handleUploadBukti }: any) {
+  const { data: session } = useSession();
+  const isUser = session?.user?.role === "user";
+  const isKetua = session?.user?.role === "ketua";
+  const isAdmin = session?.user?.role === "admin";
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Pengajuan Anggaran</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">Daftar semua permintaan dana yang telah Anda ajukan.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{(isKetua || isAdmin) ? "Daftar Pengajuan Dana" : "Pengajuan Anggaran"}</h1>
+          <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">Daftar semua permintaan dana yang telah diajukan.</p>
         </div>
         
-        <Link 
-          href="/pengajuan/baru"
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Buat Pengajuan Baru</span>
-        </Link>
+        {isUser && (
+          <Link 
+            href="/pengajuan/baru"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Buat Pengajuan Baru</span>
+          </Link>
+        )}
       </div>
 
       <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden backdrop-blur-md shadow-sm dark:shadow-none">
@@ -40,7 +48,7 @@ export default function PengajuanDefault({ data, isLoading, error, uploadingId, 
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-500 dark:text-red-400">Gagal memuat data: {(error as Error).message}</div>
-        ) : data?.length === 0 ? (
+        ) : (!data || data.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-gray-400">
             <FileText className="w-12 h-12 mb-4 opacity-50" />
             <p>Belum ada pengajuan anggaran yang dibuat.</p>

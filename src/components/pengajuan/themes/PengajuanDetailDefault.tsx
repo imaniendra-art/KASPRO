@@ -66,7 +66,13 @@ export default function PengajuanDetailDefault(props: any) {
               </div>
               <div>
                 <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Pengusul</p>
-                <p className="font-medium text-slate-900 dark:text-white">{p.pengusulId?.namaLengkap} <span className="text-slate-500 dark:text-gray-500">({p.pengusulId?.divisi})</span></p>
+                <p className="font-medium text-slate-900 dark:text-white">
+                  {p.pengusulId?.namaLengkap}{" "}
+                  {(() => {
+                    const info = p.pengusulId?.unitId?.namaUnit || (p.pengusulId?.divisi && p.pengusulId?.divisi !== "-" ? p.pengusulId.divisi : null) || p.pengusulId?.role;
+                    return info ? <span className="text-slate-500 dark:text-gray-500">({info})</span> : null;
+                  })()}
+                </p>
               </div>
               <div className="col-span-2">
                 <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Deskripsi / Latar Belakang</p>

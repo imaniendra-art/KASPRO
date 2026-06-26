@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function PengajuanBrutalism({ data, isLoading, error, uploadingId, handleUploadBukti }: any) {
+  const { data: session } = useSession();
+  const isUser = session?.user?.role === "user";
+  const isKetua = session?.user?.role === "ketua";
+  const isAdmin = session?.user?.role === "admin";
+
   return (
     <div className="p-8">
       <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -9,16 +15,18 @@ export default function PengajuanBrutalism({ data, isLoading, error, uploadingId
           <Link href="/dashboard" className="inline-block border-[4px] border-black px-4 py-2 font-black uppercase text-xl hover:bg-black hover:text-[#e5ff00] transition-colors mb-6 bg-white text-black">
             ← KEMBALI KE DASHBOARD
           </Link>
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none">Pengajuan</h1>
+          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none">{(isKetua || isAdmin) ? "DAFTAR PENGAJUAN" : "PENGAJUAN"}</h1>
           <p className="text-xl font-bold uppercase tracking-widest mt-4">Daftar Permintaan Dana</p>
         </div>
         
-        <Link 
-          href="/pengajuan/baru"
-          className="border-[4px] border-black px-8 py-4 bg-[#ff003c] text-[#ffffff] font-black text-2xl uppercase hover:bg-black hover:text-[#ff003c] transition-colors text-center"
-        >
-          + BUAT PENGAJUAN BARU
-        </Link>
+        {isUser && (
+          <Link 
+            href="/pengajuan/baru"
+            className="border-[4px] border-black px-8 py-4 bg-[#ff003c] text-[#ffffff] font-black text-2xl uppercase hover:bg-black hover:text-[#ff003c] transition-colors text-center"
+          >
+            + BUAT PENGAJUAN BARU
+          </Link>
+        )}
       </div>
 
       <div className="border-[4px] border-black bg-white text-black">
@@ -31,7 +39,7 @@ export default function PengajuanBrutalism({ data, isLoading, error, uploadingId
           <div className="p-8 text-center bg-red-500 text-[#ffffff] font-black text-2xl uppercase border-b-[4px] border-black">
             GAGAL MEMUAT: {(error as Error).message}
           </div>
-        ) : data?.length === 0 ? (
+        ) : (!data || data.length === 0) ? (
           <div className="p-20 text-center text-4xl font-black uppercase">
             BELUM ADA PENGAJUAN.
           </div>

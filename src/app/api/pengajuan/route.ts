@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import Pengajuan from "@/models/Pengajuan";
 import Proker from "@/models/Proker";
+import Unit from "@/models/Unit";
 import fs from "fs/promises";
 import path from "path";
 
@@ -87,11 +88,17 @@ export async function GET(req: Request) {
 
     let query = {};
     // Jika role user, hanya ambil miliknya. Jika admin/ketua, ambil semua (bisa ditambah filter nanti).
-    if (session.user.role === "tendik") {
+    if (session.user.role === "user") {
       query = { pengusulId: session.user.id };
     }
 
-    const data = await Pengajuan.find(query).sort({ createdAt: -1 }).populate("pengusulId", "namaLengkap divisi");
+    const data = await Pengajuan.find(query)
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "pengusulId",
+        select: "namaLengkap divisi role unitId",
+        populate: { path: "unitId", select: "namaUnit" }
+      });
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error: any) {

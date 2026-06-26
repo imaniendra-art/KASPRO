@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
 
         await connectToDatabase();
 
-        const user = await User.findOne({ username: credentials.username });
+        const user = await User.findOne({ username: credentials.username }).populate("unitId");
 
         if (!user) {
           throw new Error("Username tidak ditemukan");
@@ -36,7 +36,8 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           namaLengkap: user.namaLengkap,
           role: user.role,
-          divisi: user.divisi
+          divisi: user.divisi,
+          unitName: user.unitId?.namaUnit || "-"
         };
       }
     })
@@ -44,23 +45,26 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        // Map legacy roles to new roles
         let r = user.role;
-        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan") r = "keuangan";
-        if (r === "user" || r === "Tendik") r = "tendik";
+        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan" || r === "keuangan") r = "admin";
+        if (r === "tendik" || r === "Tendik") r = "user";
 
         token.id = user.id;
         token.username = user.username;
         token.namaLengkap = user.namaLengkap;
         token.role = r;
         token.divisi = user.divisi;
+        token.unitName = (user as any).unitName;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
+        // Map legacy roles to new roles
         let r = token.role as string;
-        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan") r = "keuangan";
-        if (r === "user" || r === "Tendik") r = "tendik";
+        if (r === "admin_keuangan" || r === "wk2_keuangan" || r === "Keuangan" || r === "keuangan") r = "admin";
+        if (r === "tendik" || r === "Tendik") r = "user";
         
         session.user = {
           id: token.id as string,
@@ -68,6 +72,7 @@ export const authOptions: NextAuthOptions = {
           namaLengkap: token.namaLengkap as string,
           role: r,
           divisi: token.divisi as string,
+          unitName: token.unitName as string
         };
       }
       return session;

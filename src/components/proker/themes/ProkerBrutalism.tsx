@@ -263,7 +263,7 @@ export default function ProkerBrutalism(props: any) {
           <div className="p-8 text-center bg-[#ff003c] text-white font-black text-2xl uppercase border-b-[4px] border-black">
             GAGAL MEMUAT: {(error as Error).message}
           </div>
-        ) : data?.length === 0 ? (
+        ) : (!data || data.length === 0) ? (
           <div className="p-20 text-center text-4xl font-black uppercase">
             BELUM ADA PROKER.
           </div>

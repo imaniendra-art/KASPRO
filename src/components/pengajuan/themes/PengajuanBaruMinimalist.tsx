@@ -44,9 +44,14 @@ export default function PengajuanBaruMinimalist(props: any) {
             <select value={prokerId} onChange={e => setProkerId(e.target.value)} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">-- Non Program Kerja --</option>
               {prokers?.map((p: any) => (
-                <option key={p._id} value={p._id}>{p.judul}</option>
+                <option key={p._id} value={p._id}>{p.judul} - Sisa Pagu: Rp {p.sisaAnggaran?.toLocaleString('id-ID')}</option>
               ))}
             </select>
+            {prokerId && (
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Pengajuan ini akan memotong Sisa Pagu dari program kerja yang dipilih.
+              </p>
+            )}
           </div>
         </div>
 

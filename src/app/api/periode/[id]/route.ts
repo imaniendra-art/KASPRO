@@ -7,11 +7,11 @@ import PeriodeAnggaran from "@/models/PeriodeAnggaran";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user.role === "keuangan") {
+    if (!session || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { isActive } = await req.json();
+    const { isActive, semester, tahunAjaran, paguMaster, sisaPagu } = await req.json();
 
     await dbConnect();
 
@@ -21,11 +21,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Periode tidak ditemukan" }, { status: 404 });
     }
 
+    if (isActive !== undefined) periode.isActive = isActive;
+    if (semester !== undefined) periode.semester = semester;
+    if (tahunAjaran !== undefined) periode.tahunAjaran = tahunAjaran;
+    if (paguMaster !== undefined) {
+      periode.paguMaster = Number(paguMaster);
+      periode.sisaPagu = Number(paguMaster);
+    }
+    if (sisaPagu !== undefined) periode.sisaPagu = Number(sisaPagu);
+
     // Using save() triggers the pre-save hook which handles deactivating others
-    periode.isActive = isActive;
     await periode.save();
 
-    return NextResponse.json({ data: periode, message: "Status periode diperbarui" }, { status: 200 });
+    return NextResponse.json({ data: periode, message: "Periode berhasil diperbarui" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -34,7 +42,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user.role === "keuangan") {
+    if (!session || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

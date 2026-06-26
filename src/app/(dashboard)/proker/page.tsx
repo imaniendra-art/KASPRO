@@ -26,6 +26,12 @@ export default function DaftarProker() {
   // Form State
   const [judul, setJudul] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
+  const [capaian, setCapaian] = useState("");
+  const [baseLine, setBaseLine] = useState<number>(0);
+  const [target, setTarget] = useState<number>(0);
+  const [waktuPelaksanaan, setWaktuPelaksanaan] = useState("");
+  const [sasaran, setSasaran] = useState("");
+  const [pesertaMitra, setPesertaMitra] = useState("");
   const [rab, setRab] = useState<any[]>([{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -58,6 +64,12 @@ export default function DaftarProker() {
     setEditingId(item._id);
     setJudul(item.judul);
     setDeskripsi(item.deskripsi || "");
+    setCapaian(item.capaian || "");
+    setBaseLine(item.baseLine || 0);
+    setTarget(item.target || 0);
+    setWaktuPelaksanaan(item.waktuPelaksanaan || "");
+    setSasaran(item.sasaran || "");
+    setPesertaMitra(item.pesertaMitra || "");
     setRab(item.rab && item.rab.length > 0 ? item.rab : [{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
     setIsCreating(true);
   };
@@ -67,6 +79,12 @@ export default function DaftarProker() {
     setEditingId(null);
     setJudul("");
     setDeskripsi("");
+    setCapaian("");
+    setBaseLine(0);
+    setTarget(0);
+    setWaktuPelaksanaan("");
+    setSasaran("");
+    setPesertaMitra("");
     setRab([{ namaItem: "", jumlah: 1, satuan: "", hargaSatuan: 0, total: 0 }]);
   };
 
@@ -83,7 +101,7 @@ export default function DaftarProker() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ judul, deskripsi, rab, estimasiAnggaran: totalEstimasi })
+        body: JSON.stringify({ judul, deskripsi, capaian, baseLine, target, waktuPelaksanaan, sasaran, pesertaMitra, rab, estimasiAnggaran: totalEstimasi })
       });
       if (!res.ok) throw new Error((await res.json()).error);
       closeForm();
@@ -164,7 +182,9 @@ export default function DaftarProker() {
   const props = {
     data, isLoading, error, session,
     isCreating, setIsCreating,
-    judul, setJudul, deskripsi, setDeskripsi, 
+    judul, setJudul, deskripsi, setDeskripsi,
+    capaian, setCapaian, baseLine, setBaseLine, target, setTarget,
+    waktuPelaksanaan, setWaktuPelaksanaan, sasaran, setSasaran, pesertaMitra, setPesertaMitra,
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
     submitting, handleCreate, ajukanKeKeuangan, kirimSemuaAjuan, hapusDraft, handleValidasi, openEditModal
   };

@@ -128,7 +128,7 @@ export default function DetailPengajuan() {
   const p = data.data;
   const logs = data.logs;
 
-  const isAdmin = role === "keuangan";
+  const isAdmin = role === "admin";
   const isKetua = role === "ketua";
   const needsAdminAction = isAdmin && p.status === "Review Admin";
   const needsKetuaAction = isKetua && p.status === "Menunggu Ketua";

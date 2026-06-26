@@ -7,6 +7,7 @@ declare module "next-auth" {
     namaLengkap: string;
     role: string;
     divisi: string;
+    unitName?: string;
   }
 
   interface Session {

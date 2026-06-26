@@ -23,6 +23,12 @@ const RabItemSchema = new Schema<IRabItem>({
 export interface IProker extends Document {
   judul: string;
   deskripsi: string;
+  capaian: string;
+  baseLine: number;
+  target: number;
+  waktuPelaksanaan: string;
+  sasaran: string;
+  pesertaMitra: string;
   estimasiAnggaran: number;
   sisaAnggaran: number;
   periodeId?: mongoose.Types.ObjectId;
@@ -35,6 +41,12 @@ export interface IProker extends Document {
 const ProkerSchema: Schema = new Schema({
   judul: { type: String, required: true },
   deskripsi: { type: String, required: true },
+  capaian: { type: String, default: '' },
+  baseLine: { type: Number, default: 0 },
+  target: { type: Number, default: 0 },
+  waktuPelaksanaan: { type: String, default: '' },
+  sasaran: { type: String, default: '' },
+  pesertaMitra: { type: String, default: '' },
   estimasiAnggaran: { type: Number, required: true, default: 0 },
   sisaAnggaran: { type: Number, default: 0 },
   periodeId: { type: mongoose.Schema.Types.ObjectId, ref: 'PeriodeAnggaran' },

@@ -28,12 +28,12 @@ export default function MinimalistLayout({ children }: { children: React.ReactNo
     { name: "Dashboard", href: "/dashboard" },
     { name: "Pengajuan Dana", href: "/pengajuan" },
     { name: "Program Kerja", href: "/proker" },
-    ...(session?.user?.role === "keuangan" ? [
+    ...(session?.user?.role === "admin" ? [
       { name: "Pengaturan", href: "/settings" },
     ] : [])
   ];
 
-  const roleName = session?.user?.role === "keuangan" ? "Keuangan" : session?.user?.role === "ketua" ? "Ketua" : "Tendik";
+  const roleName = session?.user?.role === "admin" ? "Admin" : session?.user?.role === "ketua" ? "Ketua" : "User";
 
   return (
     <div className={isDark ? "dark" : ""}>

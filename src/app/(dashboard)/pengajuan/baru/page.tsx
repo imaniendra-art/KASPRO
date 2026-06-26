@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2, Upload, Loader2, ArrowLeft, CheckCircle, Eye } from "lucide-react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,8 +10,10 @@ import PengajuanBaruDefault from "@/components/pengajuan/themes/PengajuanBaruDef
 import PengajuanBaruBrutalism from "@/components/pengajuan/themes/PengajuanBaruBrutalism";
 import PengajuanBaruMinimalist from "@/components/pengajuan/themes/PengajuanBaruMinimalist";
 
-export default function BuatPengajuanBaru() {
+function BuatPengajuanBaruContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryProkerId = searchParams.get("prokerId");
   const queryClient = useQueryClient();
   
   const [judul, setJudul] = useState("");
@@ -28,9 +30,33 @@ export default function BuatPengajuanBaru() {
     }
   });
   
-  const [rab, setRab] = useState([
+  const [rab, setRab] = useState<any[]>([
     { namaItem: "", jumlah: 1, satuan: "Pcs", hargaSatuan: 0, total: 0, file: null as File | null }
   ]);
+
+  // Handle URL query to auto-select and auto-fill RAB
+  useEffect(() => {
+    if (queryProkerId) {
+      setProkerId(queryProkerId);
+    }
+  }, [queryProkerId]);
+
+  useEffect(() => {
+    if (prokerId && prokers) {
+      const selectedProker = prokers.find((p: any) => p._id === prokerId);
+      if (selectedProker) {
+        setJudul(selectedProker.judul);
+        if (selectedProker.rab && selectedProker.rab.length > 0) {
+          // Initialize RAB from proker
+          const newRab = selectedProker.rab.map((r: any) => ({
+            ...r,
+            file: null
+          }));
+          setRab(newRab);
+        }
+      }
+    }
+  }, [prokerId, prokers]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -132,4 +158,12 @@ export default function BuatPengajuanBaru() {
   }
 
   return <PengajuanBaruDefault {...props} />;
+}
+
+export default function BuatPengajuanBaru() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <BuatPengajuanBaruContent />
+    </Suspense>
+  );
 }

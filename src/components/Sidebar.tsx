@@ -16,20 +16,20 @@ import {
 import { useSession, signOut } from "next-auth/react";
 
 const menuItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["tendik", "keuangan", "ketua"] },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "ketua", "user"] },
   
   // Menu Transaksional
-  { name: "Program Kerja", href: "/proker", icon: FileText, roles: ["tendik", "keuangan", "ketua"] },
-  { name: "Pengajuan Dana", href: "/pengajuan", icon: WalletCards, roles: ["tendik", "keuangan", "ketua"] },
+  { name: "Program Kerja", href: "/proker", icon: FileText, roles: ["admin", "ketua", "user"] },
+  { name: "Pengajuan Dana", href: "/pengajuan", icon: WalletCards, roles: ["admin", "ketua", "user"] },
   
   // Menu Khusus Admin
-  { name: "Pengaturan Sistem", href: "/settings", icon: Settings, roles: ["keuangan"] },
+  { name: "Pengaturan Sistem", href: "/settings", icon: Settings, roles: ["admin"] },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || "tendik";
+  const userRole = session?.user?.role || "user";
 
   const filteredMenus = menuItems.filter(item => item.roles.includes(userRole));
 

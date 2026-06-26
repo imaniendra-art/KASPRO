@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Upload, Loader2 } from "lucide-react";
 
 export default function PengajuanDetailMinimalist(props: any) {
   const { 
@@ -22,7 +22,7 @@ export default function PengajuanDetailMinimalist(props: any) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{p.judul}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Oleh {p.pengusulId?.namaLengkap} ({p.pengusulId?.divisi})</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Oleh {p.pengusulId?.namaLengkap} ({p.pengusulId?.unitId?.namaUnit || p.pengusulId?.divisi || p.pengusulId?.role || "-"})</p>
             {['Dicairkan', 'Selesai'].includes(p.status) && (
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${p.potongPaguMaster ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
                 {p.potongPaguMaster ? 'Dana Pagu' : 'Dana Non-Pagu'}
@@ -172,6 +172,25 @@ export default function PengajuanDetailMinimalist(props: any) {
               <button onClick={() => handleAction("Approve", "Dicairkan")} disabled={isSubmitting} className="px-5 py-2.5 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 transition-colors">
                 Cairkan Dana
               </button>
+            )}
+
+            {(p.status === 'Dicairkan' || p.status === 'Selesai') && (
+              <div className="w-full sm:w-auto mt-2 sm:mt-0">
+                <input
+                  type="file"
+                  id="upload-bukti-detail"
+                  className="hidden"
+                  accept="image/*,.pdf"
+                  onChange={(e) => handleUploadBukti(e.target.files?.[0] || null)}
+                  disabled={isSubmitting}
+                />
+                <label
+                  htmlFor="upload-bukti-detail"
+                  className="w-full cursor-pointer px-5 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-md text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors flex items-center justify-center gap-2 border border-emerald-200 dark:border-emerald-800"
+                >
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Upload className="w-4 h-4"/> {p.status === 'Selesai' ? 'Upload Ulang Bukti LPJ' : 'Upload Bukti LPJ / Kuitansi'}</>}
+                </label>
+              </div>
             )}
           </div>
         </div>

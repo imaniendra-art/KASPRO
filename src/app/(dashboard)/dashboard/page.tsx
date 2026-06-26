@@ -7,8 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import DashboardDefault from "@/components/dashboard/themes/DashboardDefault";
 import DashboardBrutalism from "@/components/dashboard/themes/DashboardBrutalism";
-import DashboardBento from "@/components/dashboard/themes/DashboardBento";
-import DashboardMesh from "@/components/dashboard/themes/DashboardMesh";
+
 import DashboardMinimalist from "@/components/dashboard/themes/DashboardMinimalist";
 
 export default function DashboardPage() {
@@ -43,10 +42,7 @@ export default function DashboardPage() {
   switch (theme) {
     case "theme-brutalism":
       return <DashboardBrutalism session={session} stats={safeStats} />;
-    case "theme-bento":
-      return <DashboardBento session={session} stats={safeStats} />;
-    case "theme-mesh":
-      return <DashboardMesh session={session} stats={safeStats} />;
+
     case "theme-minimalist":
       return <DashboardMinimalist session={session} stats={safeStats} />;
     default:

@@ -3,12 +3,12 @@ import bcrypt from "bcryptjs";
 import User from "../models/User";
 import * as dotenv from "dotenv";
 
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env" });
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI tidak ditemukan di .env.local");
+  throw new Error("MONGODB_URI tidak ditemukan di .env");
 }
 
 async function seed() {
@@ -24,30 +24,16 @@ async function seed() {
 
     const users = [
       {
-        username: "tendik",
+        username: "admin",
         password: passwordHash,
-        namaLengkap: "Staf Tendik (User)",
-        divisi: "Tendik",
-        role: "tendik",
-      },
-      {
-        username: "keuangan",
-        password: passwordHash,
-        namaLengkap: "Admin Keuangan",
-        divisi: "Keuangan",
-        role: "keuangan",
-      },
-      {
-        username: "ketua",
-        password: passwordHash,
-        namaLengkap: "Ketua Umum",
-        divisi: "Pimpinan",
-        role: "ketua",
+        namaLengkap: "Admin KASPRO",
+        divisi: "Pusdatin",
+        role: "admin",
       }
     ];
 
     await User.insertMany(users);
-    console.log("Berhasil insert 4 akun dummy!");
+    console.log("Berhasil insert akun admin!");
     
     process.exit(0);
   } catch (error) {

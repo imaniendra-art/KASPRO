@@ -49,7 +49,7 @@ export default function DashboardMinimalist({ session, stats }: { session: any, 
                       {item._type === 'proker' ? 'Validasi Proker: ' : 'Pengajuan Baru: '} {item.judul}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      Dari: {item.pengusulId?.namaLengkap} • Rp {(item.estimasiAnggaran || item.totalNominal || 0).toLocaleString('id-ID')}
+                      Dari: {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"}) • Rp {(item.estimasiAnggaran || item.totalNominal || 0).toLocaleString('id-ID')}
                     </p>
                   </div>
                   <Link href={item._type === 'proker' ? '/proker' : `/pengajuan/${item._id}`} className={`ml-4 text-xs font-medium px-3 py-1.5 rounded-md text-white whitespace-nowrap ${item._type === 'proker' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
@@ -60,6 +60,60 @@ export default function DashboardMinimalist({ session, stats }: { session: any, 
           </div>
         </div>
       )}
+
+      {/* Riwayat Proker (Summary) */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mt-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+          Status Program Kerja Utama
+        </h2>
+        {stats?.riwayatProker?.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Belum ada program kerja.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  <th className="p-3 font-semibold">Program Kerja</th>
+                  <th className="p-3 font-semibold text-right">Estimasi Awal</th>
+                  <th className="p-3 font-semibold text-right">Sisa Pagu</th>
+                  <th className="p-3 font-semibold">Status</th>
+                  <th className="p-3 font-semibold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {stats?.riwayatProker?.map((proker: any) => (
+                  <tr key={proker._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="p-3 font-medium text-gray-900 dark:text-white">{proker.judul}</td>
+                    <td className="p-3 text-right text-gray-500">Rp {proker.estimasiAnggaran?.toLocaleString('id-ID')}</td>
+                    <td className="p-3 text-right font-semibold text-blue-600 dark:text-blue-400">Rp {proker.sisaAnggaran?.toLocaleString('id-ID')}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold
+                        ${proker.status === 'Divalidasi Keuangan' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                          proker.status === 'Ditolak' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}
+                      >
+                        {proker.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      {proker.status === 'Divalidasi Keuangan' ? (
+                        <Link 
+                          href={`/pengajuan/baru?prokerId=${proker._id}`}
+                          className="inline-flex items-center justify-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors whitespace-nowrap"
+                        >
+                          Ajukan Anggaran
+                        </Link>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Riwayat Pencairan */}
       {stats?.riwayatPengajuan && (

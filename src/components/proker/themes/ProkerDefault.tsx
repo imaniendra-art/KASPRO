@@ -1,6 +1,6 @@
 import { FolderKanban, Loader2, Plus, Send, Trash2, Pencil, CheckCircle, XCircle, MessageSquare, AlertCircle, X, Eye, Info } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState } from "react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -17,30 +17,96 @@ export default function ProkerDefault(props: any) {
     data, isLoading, error, session,
     isCreating, setIsCreating,
     judul, setJudul, deskripsi, setDeskripsi,
+    capaian, setCapaian, baseLine, setBaseLine, target, setTarget,
+    waktuPelaksanaan, setWaktuPelaksanaan, sasaran, setSasaran, pesertaMitra, setPesertaMitra,
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
     submitting, handleCreate, ajukanKeKeuangan, hapusDraft, handleValidasi, openEditModal
   } = props;
 
-  const [activeModal, setActiveModal] = useState<any>(null);
+  const [expandedProkerId, setExpandedProkerId] = useState<string | null>(null);
+
+  const formatWaktuPelaksanaan = (waktuStr: string) => {
+    if (!waktuStr) return "-";
+    const parts = waktuStr.split(",");
+    const startDate = new Date(parts[0]);
+    if (isNaN(startDate.getTime())) return waktuStr;
+    const endDate = parts[1] ? new Date(parts[1]) : null;
+    const formatDate = (d: Date) => d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    return endDate && endDate.getTime() !== startDate.getTime()
+      ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+      : formatDate(startDate);
+  };
   const [valAnggaran, setValAnggaran] = useState<number>(0);
   const [valCatatan, setValCatatan] = useState("");
-  const [viewRabModal, setViewRabModal] = useState<any>(null);
+  const [valRab, setValRab] = useState<any[]>([]);
   const [showInfo, setShowInfo] = useState(false);
 
-  const openValidasiModal = (item: any) => {
-    setActiveModal(item);
-    setValAnggaran(item.estimasiAnggaran);
-    setValCatatan("");
+  const [waktuMulai, setWaktuMulai] = useState("");
+  const [waktuSelesai, setWaktuSelesai] = useState("");
+
+  React.useEffect(() => {
+    if (waktuPelaksanaan && waktuPelaksanaan.includes(",")) {
+      const [start, end] = waktuPelaksanaan.split(",");
+      setWaktuMulai(start || "");
+      setWaktuSelesai(end || "");
+    } else {
+      setWaktuMulai(waktuPelaksanaan || "");
+      setWaktuSelesai("");
+    }
+  }, [waktuPelaksanaan]);
+
+  const handleWaktuChange = (type: 'start' | 'end', val: string) => {
+    const start = type === 'start' ? val : waktuMulai;
+    const end = type === 'end' ? val : waktuSelesai;
+    setWaktuMulai(start);
+    setWaktuSelesai(end);
+    if (start && end) {
+      setWaktuPelaksanaan(`${start},${end}`);
+    } else if (start) {
+      setWaktuPelaksanaan(start);
+    } else if (end) {
+      setWaktuPelaksanaan(end);
+    } else {
+      setWaktuPelaksanaan("");
+    }
   };
 
-  const closeValidasiModal = () => {
-    setActiveModal(null);
+  const toggleExpanded = (item: any) => {
+    if (expandedProkerId === item._id) {
+      setExpandedProkerId(null);
+    } else {
+      setExpandedProkerId(item._id);
+      setValAnggaran(item.estimasiAnggaran);
+      setValCatatan("");
+      setValRab(item.rab ? JSON.parse(JSON.stringify(item.rab)) : []);
+    }
   };
 
-  const submitValidasi = (status: string) => {
+  const handleValRabChange = (index: number, field: string, value: string | number) => {
+    const updated = [...valRab];
+    updated[index][field] = value;
+    if (field === 'jumlah' || field === 'hargaSatuan') {
+      const vol = Number(updated[index].jumlah) || 0;
+      const hrg = Number(updated[index].hargaSatuan) || 0;
+      updated[index].total = vol * hrg;
+    }
+    setValRab(updated);
+    const newTotal = updated.reduce((sum, r) => sum + (Number(r.total) || 0), 0);
+    setValAnggaran(newTotal);
+  };
+
+  const removeValRabItem = (index: number) => {
+    const updated = [...valRab];
+    updated.splice(index, 1);
+    setValRab(updated);
+    const newTotal = updated.reduce((sum, r) => sum + (Number(r.total) || 0), 0);
+    setValAnggaran(newTotal);
+  };
+
+  const submitValidasi = (id: string, status: string) => {
     if (handleValidasi) {
-      handleValidasi(activeModal._id, status, valAnggaran, valCatatan).then(() => {
-        closeValidasiModal();
+      handleValidasi(id, status, valAnggaran, valCatatan, valRab).then(() => {
+        setExpandedProkerId(null);
       });
     }
   };
@@ -54,7 +120,7 @@ export default function ProkerDefault(props: any) {
           <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">Kelola rencana kegiatan dan estimasi anggaran divisi Anda.</p>
         </div>
         
-        {session?.user?.role === "tendik" && (
+        {session?.user?.role === "user" && (
           <div className="flex gap-3">
             <button 
               onClick={props.kirimSemuaAjuan}
@@ -151,13 +217,84 @@ export default function ProkerDefault(props: any) {
                 placeholder="Harap baca info terlebih dahulu... (Contoh: Peningkatan Performa Pelayanan Prodi)" 
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Tujuan / Deskripsi</label>
-              <textarea 
-                value={deskripsi} onChange={e => setDeskripsi(e.target.value)} required rows={3}
-                className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="Jelaskan secara singkat tujuan dan output kegiatan..." 
-              />
+            {/* Row 1: Deskripsi, Capaian, Base Line */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Deskripsi</label>
+                <input 
+                  type="text" value={deskripsi} onChange={e => setDeskripsi(e.target.value)} required
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="Deskripsi singkat kegiatan..." 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Capaian</label>
+                <input 
+                  type="text" value={capaian} onChange={e => setCapaian(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="Capaian yang diharapkan..." 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Base Line (%)</label>
+                <div className="relative">
+                  <input 
+                    type="number" min="0" max="100" value={baseLine} onChange={e => setBaseLine(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    placeholder="0" 
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">%</span>
+                </div>
+              </div>
+            </div>
+            {/* Row 2: Target, Waktu Pelaksanaan, Sasaran */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Target (%)</label>
+                <div className="relative">
+                  <input 
+                    type="number" min="0" max="100" value={target} onChange={e => setTarget(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    placeholder="100" 
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">%</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Mulai Pelaksanaan</label>
+                  <input 
+                    type="date" value={waktuMulai} onChange={e => handleWaktuChange('start', e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Akhir Pelaksanaan (Opsional)</label>
+                  <input 
+                    type="date" value={waktuSelesai} onChange={e => handleWaktuChange('end', e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Sasaran</label>
+                <input 
+                  type="text" value={sasaran} onChange={e => setSasaran(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="Sasaran program kerja..." 
+                />
+              </div>
+            </div>
+            {/* Row 3 partial: Peserta/Mitra */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-gray-400 mb-1.5">Peserta / Mitra</label>
+                <input 
+                  type="text" value={pesertaMitra} onChange={e => setPesertaMitra(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="Peserta atau mitra terlibat..." 
+                />
+              </div>
             </div>
             {/* RAB Table Input */}
             <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-6 backdrop-blur-md overflow-hidden">
@@ -273,7 +410,7 @@ export default function ProkerDefault(props: any) {
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-500 dark:text-red-400">Gagal memuat data: {(error as Error).message}</div>
-        ) : data?.length === 0 ? (
+        ) : (!data || data.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-gray-400">
             <FolderKanban className="w-12 h-12 mb-4 opacity-50" />
             <p>Belum ada program kerja yang dibuat.</p>
@@ -292,11 +429,18 @@ export default function ProkerDefault(props: any) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {data.map((item: any) => (
-                  <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                {data.map((item: any) => {
+                  const isAdminValidating = ["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi";
+                  return (
+                  <React.Fragment key={item._id}>
+                  <tr className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                     <td className="p-4">
                       <p className="font-medium text-slate-900 dark:text-white">{item.judul}</p>
-                      {session?.user?.role === "tendik" === false && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Oleh: {item.pengusulId?.namaLengkap}</p>}
+                      {session?.user?.role !== "user" && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          Oleh: {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"})
+                        </p>
+                      )}
                     </td>
                     <td className="p-4 text-sm text-slate-500 dark:text-gray-400 max-w-xs">
                       <div className="truncate" title={item.deskripsi}>{item.deskripsi}</div>
@@ -307,17 +451,8 @@ export default function ProkerDefault(props: any) {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 font-medium text-slate-500 dark:text-gray-400 flex items-center gap-3">
+                    <td className="p-4 font-medium text-slate-500 dark:text-gray-400">
                       <span>Rp {item.estimasiAnggaran.toLocaleString('id-ID')}</span>
-                      {(item.rab && item.rab.length > 0) && (
-                        <button 
-                          onClick={() => setViewRabModal(item)}
-                          className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 rounded-md transition-colors"
-                          title="Lihat Rincian RAB"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      )}
                     </td>
                     <td className="p-4 font-bold text-slate-900 dark:text-white">
                       Rp {item.sisaAnggaran.toLocaleString('id-ID')}
@@ -328,7 +463,7 @@ export default function ProkerDefault(props: any) {
                       </span>
                     </td>
                     <td className="p-4 text-right flex items-center justify-end gap-3">
-                      {session?.user?.role === "tendik" && item.status === "Draft" && (
+                      {session?.user?.role === "user" && item.status === "Draft" && (
                         <>
                           <button onClick={() => openEditModal(item)} className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1">
                             <Pencil className="w-4 h-4" /> Edit
@@ -338,169 +473,181 @@ export default function ProkerDefault(props: any) {
                           </button>
                         </>
                       )}
+                      {((session?.user?.role === "user" && item.status !== "Draft") || (["admin", "ketua"].includes(session?.user?.role) && item.status !== "Menunggu Validasi")) && (
+                        <button onClick={() => toggleExpanded(item)} className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                          <Eye className="w-4 h-4" /> {expandedProkerId === item._id ? "Tutup" : "Lihat Rincian"}
+                        </button>
+                      )}
                       
-                      {["keuangan", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
-                        <button onClick={() => openValidasiModal(item)} className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors">
-                          Validasi Ajuan
+                      {isAdminValidating && (
+                        <button onClick={() => toggleExpanded(item)} className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                          {expandedProkerId === item._id ? "Tutup Rincian" : "Validasi Ajuan"}
                         </button>
                       )}
                     </td>
                   </tr>
-                ))}
+                  {expandedProkerId === item._id && (
+                    <tr className="bg-slate-50/50 dark:bg-white/[0.01]">
+                      <td colSpan={6} className="p-0 border-b border-slate-200 dark:border-white/10">
+                        <div className="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                          
+                          {/* Rincian Proker */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-[#1a1a1a] p-5 rounded-xl border border-slate-200 dark:border-white/10">
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Capaian</p>
+                              <p className="text-sm text-slate-900 dark:text-white">{item.capaian || "-"}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Base Line & Target</p>
+                              <p className="text-sm text-slate-900 dark:text-white">{item.baseLine || 0}% &rarr; {item.target || 0}%</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Waktu Pelaksanaan</p>
+                              <p className="text-sm text-slate-900 dark:text-white">{formatWaktuPelaksanaan(item.waktuPelaksanaan)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sasaran</p>
+                              <p className="text-sm text-slate-900 dark:text-white">{item.sasaran || "-"}</p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Peserta / Mitra</p>
+                              <p className="text-sm text-slate-900 dark:text-white">{item.pesertaMitra || "-"}</p>
+                            </div>
+                          </div>
+
+                          {/* RAB */}
+                          <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+                            <div className="p-4 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                              <h4 className="font-bold text-slate-900 dark:text-white text-sm">Rincian Anggaran Biaya (RAB)</h4>
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-gray-400">
+                                  <tr>
+                                    <th className="p-3 font-semibold">Nama Item</th>
+                                    <th className="p-3 font-semibold w-24">Volume</th>
+                                    <th className="p-3 font-semibold w-24">Satuan</th>
+                                    <th className="p-3 font-semibold w-40">Harga Satuan</th>
+                                    <th className="p-3 font-semibold text-right">Total</th>
+                                    {isAdminValidating && <th className="p-3 font-semibold w-10"></th>}
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                                  {valRab?.map((r: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
+                                      <td className="p-3 text-slate-900 dark:text-white">
+                                        {isAdminValidating ? (
+                                          <input type="text" value={r.namaItem} onChange={e => handleValRabChange(idx, 'namaItem', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                        ) : r.namaItem}
+                                      </td>
+                                      <td className="p-3 text-slate-600 dark:text-gray-400">
+                                        {isAdminValidating ? (
+                                          <input type="number" value={r.jumlah} onChange={e => handleValRabChange(idx, 'jumlah', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                        ) : r.jumlah}
+                                      </td>
+                                      <td className="p-3 text-slate-600 dark:text-gray-400">
+                                        {isAdminValidating ? (
+                                          <input type="text" value={r.satuan} onChange={e => handleValRabChange(idx, 'satuan', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                        ) : r.satuan}
+                                      </td>
+                                      <td className="p-3 text-slate-600 dark:text-gray-400">
+                                        {isAdminValidating ? (
+                                          <input type="number" value={r.hargaSatuan} onChange={e => handleValRabChange(idx, 'hargaSatuan', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                        ) : `Rp ${r.hargaSatuan?.toLocaleString('id-ID')}`}
+                                      </td>
+                                      <td className="p-3 font-medium text-slate-900 dark:text-white text-right">Rp {r.total?.toLocaleString('id-ID')}</td>
+                                      {isAdminValidating && (
+                                        <td className="p-3">
+                                          <button onClick={() => removeValRabItem(idx)} className="text-red-400 hover:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                                <tfoot className="bg-slate-50 dark:bg-black/20">
+                                  <tr>
+                                    <td colSpan={4} className="p-3 text-right font-bold text-slate-600 dark:text-gray-400">Total RAB{isAdminValidating ? ' (Otomatis)' : ''}:</td>
+                                    <td className="p-3 text-right font-bold text-blue-600 dark:text-blue-400">
+                                      Rp {valAnggaran?.toLocaleString('id-ID')}
+                                    </td>
+                                    {isAdminValidating && <td></td>}
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Validasi Form */}
+                          {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
+                            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                              <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                                <FolderKanban className="w-4 h-4 text-blue-500" /> Form Validasi
+                              </h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Sesuaikan Nominal</label>
+                                  <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">Rp</span>
+                                    <input 
+                                      type="number" 
+                                      value={valAnggaran} 
+                                      onChange={e => setValAnggaran(Number(e.target.value))}
+                                      className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
+                                    <MessageSquare className="w-4 h-4" /> Catatan Admin
+                                  </label>
+                                  <input 
+                                    type="text"
+                                    value={valCatatan}
+                                    onChange={e => setValCatatan(e.target.value)}
+                                    placeholder="Alasan ditolak / direvisi..."
+                                    className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-blue-200/50 dark:border-blue-800/30">
+                                <button 
+                                  onClick={() => submitValidasi(item._id, "Draft")}
+                                  className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 rounded-xl text-sm font-medium transition-colors"
+                                >
+                                  <AlertCircle className="w-4 h-4" /> Kembalikan
+                                </button>
+                                <button 
+                                  onClick={() => submitValidasi(item._id, "Ditolak")}
+                                  className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 rounded-xl text-sm font-medium transition-colors"
+                                >
+                                  <XCircle className="w-4 h-4" /> Tolak
+                                </button>
+                                <button 
+                                  onClick={() => submitValidasi(item._id, "Divalidasi Keuangan")}
+                                  className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 rounded-xl text-sm font-medium transition-colors"
+                                >
+                                  <CheckCircle className="w-4 h-4" /> ACC Proker
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      {/* Modal Validasi Proker */}
-      {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-white/10 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <FolderKanban className="w-5 h-5 text-blue-500" />
-                Validasi Program Kerja
-              </h3>
-              <button onClick={closeValidasiModal} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/10">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Ajuan User</p>
-                <p className="font-bold text-slate-900 dark:text-white">{activeModal.judul}</p>
-                <p className="text-sm text-slate-600 dark:text-gray-400 mt-1">{activeModal.deskripsi}</p>
-                <div className="mt-3 text-sm">
-                  <span className="text-slate-500">Estimasi Awal:</span> <span className="font-semibold text-slate-900 dark:text-white">Rp {activeModal.estimasiAnggaran.toLocaleString('id-ID')}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Ubah Nominal (Jika perlu)</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">Rp</span>
-                  <input 
-                    type="number" 
-                    value={valAnggaran} 
-                    onChange={e => setValAnggaran(Number(e.target.value))}
-                    className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
-                  <MessageSquare className="w-4 h-4" /> Komentar / Penjelasan
-                </label>
-                <textarea 
-                  value={valCatatan}
-                  onChange={e => setValCatatan(e.target.value)}
-                  placeholder="Beri alasan jika ditolak atau dikembalikan..."
-                  rows={3}
-                  className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                ></textarea>
-              </div>
-            </div>
-            
-            <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#1a1a1a] flex flex-wrap justify-end gap-3">
-              <button 
-                onClick={closeValidasiModal}
-                className="px-5 py-2.5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl font-medium transition-colors"
-              >
-                Batal
-              </button>
-              
-              <button 
-                onClick={() => submitValidasi("Draft")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 rounded-xl font-medium transition-colors"
-              >
-                <AlertCircle className="w-4 h-4" /> Kembalikan
-              </button>
-
-              <button 
-                onClick={() => submitValidasi("Ditolak")}
-                className="flex items-center gap-2 px-5 py-2.5 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 rounded-xl font-medium transition-colors"
-              >
-                <XCircle className="w-4 h-4" /> Tolak
-              </button>
-
-              <button 
-                onClick={() => submitValidasi("Divalidasi Keuangan")}
-                className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 rounded-xl font-medium transition-colors"
-              >
-                <CheckCircle className="w-4 h-4" /> ACC Proker
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal View RAB */}
-      {viewRabModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-200 dark:border-white/10 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Eye className="w-5 h-5 text-blue-500" />
-                Rincian RAB Proker
-              </h3>
-              <button onClick={() => setViewRabModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <div className="mb-6 bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-100 dark:border-white/10">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Judul Proker</p>
-                <p className="font-bold text-slate-900 dark:text-white">{viewRabModal.judul}</p>
-              </div>
-
-              <div className="overflow-x-auto border border-slate-200 dark:border-white/10 rounded-xl">
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-gray-400">
-                    <tr>
-                      <th className="p-4 font-semibold">Nama Item</th>
-                      <th className="p-4 font-semibold">Volume</th>
-                      <th className="p-4 font-semibold">Satuan</th>
-                      <th className="p-4 font-semibold">Harga Satuan</th>
-                      <th className="p-4 font-semibold text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                    {viewRabModal.rab?.map((r: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
-                        <td className="p-4 text-slate-900 dark:text-white">{r.namaItem}</td>
-                        <td className="p-4 text-slate-600 dark:text-gray-400">{r.jumlah}</td>
-                        <td className="p-4 text-slate-600 dark:text-gray-400">{r.satuan}</td>
-                        <td className="p-4 text-slate-600 dark:text-gray-400">Rp {r.hargaSatuan?.toLocaleString('id-ID')}</td>
-                        <td className="p-4 font-medium text-slate-900 dark:text-white text-right">Rp {r.total?.toLocaleString('id-ID')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-slate-50 dark:bg-black/20">
-                    <tr>
-                      <td colSpan={4} className="p-4 text-right font-bold text-slate-600 dark:text-gray-400">Total Keseluruhan:</td>
-                      <td className="p-4 text-right font-bold text-blue-600 dark:text-blue-400">
-                        Rp {viewRabModal.estimasiAnggaran?.toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-            
-            <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#1a1a1a] flex justify-end">
-              <button 
-                onClick={() => setViewRabModal(null)}
-                className="px-6 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-gray-100 rounded-xl font-medium transition-colors"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

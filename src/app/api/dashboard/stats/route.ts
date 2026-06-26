@@ -7,6 +7,7 @@ import PeriodeAnggaran from "@/models/PeriodeAnggaran";
 import Pengajuan from "@/models/Pengajuan";
 import User from "@/models/User"; // Ensure User is loaded for population
 import Proker from "@/models/Proker";
+import Unit from "@/models/Unit";
 import ApprovalLog from "@/models/ApprovalLog";
 
 export async function GET(req: Request) {
@@ -21,9 +22,9 @@ export async function GET(req: Request) {
     const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
     
     // ============================================
-    // USER SPECIFIC DASHBOARD (role === 'tendik')
+    // USER SPECIFIC DASHBOARD (role === 'user')
     // ============================================
-    if (session.user.role === "tendik") {
+    if (session.user.role === "user") {
       const userId = session.user.id;
 
       // 1. Rencana Proker Rp. (Sum of estimasiAnggaran for user's Proker)
@@ -106,7 +107,7 @@ export async function GET(req: Request) {
 
       return NextResponse.json({
         data: {
-          role: "tendik",
+          role: "user",
           rencanaProker,
           totalDiajukan,
           danaCair,
@@ -149,26 +150,26 @@ export async function GET(req: Request) {
     // Get 1 most recent pengajuan
     const recentPengajuan = await Pengajuan.findOne()
       .sort({ createdAt: -1 })
-      .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User });
+      .populate({ path: "pengusulId", select: "namaLengkap role divisi unitId", populate: { path: "unitId", select: "namaUnit" }, model: User });
 
     // Get 1 most recent proker awaiting validation
     const recentProker = await Proker.findOne({ status: "Menunggu Validasi" })
       .sort({ updatedAt: -1 })
-      .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User });
+      .populate({ path: "pengusulId", select: "namaLengkap role divisi unitId", populate: { path: "unitId", select: "namaUnit" }, model: User });
 
     // Get ALL pending lists based on roles
     let pendingProkerList: any[] = [];
-    if (session.user.role === "keuangan") {
+    if (session.user.role === "admin") {
       pendingProkerList = await Proker.find({ status: "Menunggu Validasi" })
         .sort({ updatedAt: -1 })
-        .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+        .populate({ path: "pengusulId", select: "namaLengkap role divisi unitId", populate: { path: "unitId", select: "namaUnit" }, model: User })
         .lean();
     }
 
     let pendingPengajuanStatuses: string[] = [];
     if (session.user.role === "ketua") {
       pendingPengajuanStatuses = ["Menunggu Ketua"];
-    } else if (session.user.role === "keuangan") {
+    } else if (session.user.role === "admin") {
       pendingPengajuanStatuses = ["Review Admin", "Disetujui Ketua"];
     } else {
       pendingPengajuanStatuses = ["Review Admin", "Menunggu Ketua", "Disetujui Ketua"];
@@ -176,18 +177,18 @@ export async function GET(req: Request) {
 
     const pendingPengajuanList = await Pengajuan.find({ status: { $in: pendingPengajuanStatuses } })
       .sort({ createdAt: -1 })
-      .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+      .populate({ path: "pengusulId", select: "namaLengkap role divisi unitId", populate: { path: "unitId", select: "namaUnit" }, model: User })
       .lean();
 
     // Pengajuan yang sudah upload bukti/LPJ oleh user (status Selesai, ada buktiLpj)
     let pendingBuktiList: any[] = [];
-    if (session.user.role === "keuangan") {
+    if (session.user.role === "admin") {
       pendingBuktiList = await Pengajuan.find({
         status: "Selesai",
         buktiLpj: { $exists: true, $ne: "" }
       })
         .sort({ updatedAt: -1 })
-        .populate({ path: "pengusulId", select: "namaLengkap role divisi", model: User })
+        .populate({ path: "pengusulId", select: "namaLengkap role divisi unitId", populate: { path: "unitId", select: "namaUnit" }, model: User })
         .lean();
     }
 

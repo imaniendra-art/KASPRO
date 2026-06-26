@@ -6,7 +6,7 @@ export interface IApprovalLog extends Document {
   role: string;
   aksi: 'Approve' | 'Reject' | 'Kembalikan' | 'Teruskan' | 'Upload Bukti';
   catatan?: string;
-  tujuanCatatan: 'tendik' | 'keuangan' | 'umum';
+  tujuanCatatan: 'user' | 'admin' | 'umum';
 }
 
 const ApprovalLogSchema: Schema = new Schema({
@@ -21,7 +21,7 @@ const ApprovalLogSchema: Schema = new Schema({
   catatan: { type: String },
   tujuanCatatan: {
     type: String,
-    enum: ['tendik', 'keuangan', 'umum'],
+    enum: ['user', 'admin', 'umum'],
     default: 'umum'
   }
 }, { timestamps: true });
