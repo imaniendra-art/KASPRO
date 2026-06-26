@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Eye, MessageSquare, X } from "lucide-react";
 
 export default function DashboardBrutalism({ session, stats }: { session: any, stats?: any }) {
-  const isUser = session?.user?.role === "tendik";
+  const isUser = session?.user?.role === "user";
 
   const [activeModal, setActiveModal] = useState<'pesan' | 'rab' | null>(null);
   const [modalData, setModalData] = useState<any>(null);
@@ -321,12 +321,12 @@ export default function DashboardBrutalism({ session, stats }: { session: any, s
           <div className="text-6xl mb-4 group-hover:translate-x-4 transition-transform">→</div>
           <div className="text-5xl font-black uppercase tracking-tighter">Pengajuan<br/>Dana</div>
         </Link>
-        <Link href="/proker" className={`flex-1 p-8 hover:bg-black hover:text-[#e5ff00] transition-colors flex flex-col justify-end group cursor-pointer bg-white text-black min-h-[300px] ${session?.user?.role === 'keuangan' ? 'border-b-[4px] border-black' : ''}`}>
+        <Link href="/proker" className={`flex-1 p-8 hover:bg-black hover:text-[#e5ff00] transition-colors flex flex-col justify-end group cursor-pointer bg-white text-black min-h-[300px] ${session?.user?.role === 'admin' ? 'border-b-[4px] border-black' : ''}`}>
           <div className="text-6xl mb-4 group-hover:translate-x-4 transition-transform">→</div>
           <div className="text-5xl font-black uppercase tracking-tighter">Program<br/>Kerja</div>
         </Link>
         
-        {session?.user?.role === "keuangan" && (
+        {session?.user?.role === "admin" && (
           <Link href="/settings" className="flex-1 p-8 hover:bg-black hover:text-[#e5ff00] transition-colors flex flex-col justify-end group cursor-pointer bg-blue-500 text-black min-h-[300px]">
             <div className="text-6xl mb-4 group-hover:translate-x-4 transition-transform">⚙</div>
             <div className="text-5xl font-black uppercase tracking-tighter">Settings</div>

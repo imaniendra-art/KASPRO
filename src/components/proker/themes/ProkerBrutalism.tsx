@@ -7,6 +7,9 @@ export default function ProkerBrutalism(props: any) {
     data, isLoading, error, session,
     isCreating, setIsCreating,
     judul, setJudul, deskripsi, setDeskripsi,
+    target, setTarget, sasaran, setSasaran, pesertaMitra, setPesertaMitra,
+    waktuMulai, setWaktuMulai, waktuSelesai, setWaktuSelesai,
+    baseLine, setBaseLine, capaian, setCapaian,
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
     submitting, handleCreate, ajukanKeKeuangan, kirimSemuaAjuan, hapusDraft, handleValidasi, openEditModal
   } = props;
@@ -37,6 +40,16 @@ export default function ProkerBrutalism(props: any) {
     setValAnggaran(newTotal);
   };
 
+  const handleWaktuChange = (type: 'start' | 'end', val: string) => {
+    const start = type === 'start' ? val : waktuMulai;
+    const end = type === 'end' ? val : waktuSelesai;
+    setWaktuMulai(start);
+    setWaktuSelesai(end);
+    if (start && end) {
+      // Logic handled in page.tsx usually, but we update the raw states here
+    }
+  };
+
   const closeValidasiModal = () => {
     setActiveModal(null);
   };
@@ -62,7 +75,7 @@ export default function ProkerBrutalism(props: any) {
           <p className="text-xl font-bold uppercase tracking-widest mt-4">Program Kerja & Anggaran</p>
         </div>
         
-        {session?.user?.role === "tendik" && (
+        {session?.user?.role === "user" && (
           <div className="flex flex-col md:flex-row gap-4">
             <button 
               onClick={kirimSemuaAjuan}
@@ -151,13 +164,85 @@ export default function ProkerBrutalism(props: any) {
               />
             </div>
 
-            <div>
-              <label className="block text-xl font-black uppercase mb-2 text-black">Tujuan / Deskripsi</label>
-              <textarea 
-                value={deskripsi} onChange={e => setDeskripsi(e.target.value)} required rows={3}
-                className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
-                placeholder="TUJUAN PROGRAM" 
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xl font-black uppercase mb-2 text-black">Tujuan / Deskripsi</label>
+                <textarea 
+                  value={deskripsi} onChange={e => setDeskripsi(e.target.value)} required rows={3}
+                  className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                  placeholder="TUJUAN PROGRAM" 
+                />
+              </div>
+              <div className="flex flex-col gap-6">
+                <div>
+                  <label className="block text-xl font-black uppercase mb-2 text-black">Capaian</label>
+                  <input 
+                    type="text" value={capaian} onChange={e => setCapaian(e.target.value)}
+                    className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                    placeholder="CAPAIAN YANG DIHARAPKAN..." 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xl font-black uppercase mb-2 text-black">Base Line (%)</label>
+                  <div className="relative">
+                    <input 
+                      type="number" min="0" max="100" value={baseLine} onChange={e => setBaseLine(Number(e.target.value))}
+                      className="w-full bg-white border-[4px] border-black py-4 px-6 pr-12 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                      placeholder="0" 
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-xl">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-xl font-black uppercase mb-2 text-black">Target (%)</label>
+                <div className="relative">
+                  <input 
+                    type="number" min="0" max="100" value={target} onChange={e => setTarget(Number(e.target.value))}
+                    className="w-full bg-white border-[4px] border-black py-4 px-6 pr-12 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                    placeholder="100" 
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-xl">%</span>
+                </div>
+              </div>
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xl font-black uppercase mb-2 text-black">Mulai Pelaksanaan</label>
+                  <input 
+                    type="date" value={waktuMulai} onChange={e => handleWaktuChange('start', e.target.value)}
+                    className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xl font-black uppercase mb-2 text-black">Akhir (Opsional)</label>
+                  <input 
+                    type="date" value={waktuSelesai} onChange={e => handleWaktuChange('end', e.target.value)}
+                    className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xl font-black uppercase mb-2 text-black">Sasaran</label>
+                <input 
+                  type="text" value={sasaran} onChange={e => setSasaran(e.target.value)}
+                  className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                  placeholder="SASARAN PROGRAM..." 
+                />
+              </div>
+              <div>
+                <label className="block text-xl font-black uppercase mb-2 text-black">Peserta / Mitra</label>
+                <input 
+                  type="text" value={pesertaMitra} onChange={e => setPesertaMitra(e.target.value)}
+                  className="w-full bg-white border-[4px] border-black py-4 px-6 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-white transition-colors"
+                  placeholder="PESERTA ATAU MITRA..." 
+                />
+              </div>
             </div>
 
             {/* RAB Table Input */}
@@ -317,7 +402,7 @@ export default function ProkerBrutalism(props: any) {
                     </td>
                     <td className="p-6 text-right h-full align-middle">
                       <div className="flex flex-col items-end justify-center gap-3 min-h-[120px]">
-                        {session?.user?.role === "tendik" && (
+                        {session?.user?.role === "user" && (
                           <>
                             <button onClick={() => openEditModal(item)} className="border-[4px] border-black bg-white text-black px-6 py-2 text-lg font-black uppercase hover:bg-black hover:text-[#e5ff00] transition-colors shadow-[4px_4px_0_0_#000] group">
                               <Pencil className="w-6 h-6 mx-auto group-hover:text-[#e5ff00] transition-colors" />
@@ -328,7 +413,7 @@ export default function ProkerBrutalism(props: any) {
                           </>
                         )}
                         
-                        {["keuangan", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
+                        {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
                           <button onClick={() => openValidasiModal(item)} className="border-[4px] border-black bg-black text-[#e5ff00] px-6 py-4 text-xl font-black uppercase hover:bg-[#ff003c] hover:text-white transition-colors shadow-[6px_6px_0_0_#000]">
                             VALIDASI
                           </button>
@@ -364,6 +449,29 @@ export default function ProkerBrutalism(props: any) {
                 <p className="text-lg font-bold text-black border-l-[4px] border-black pl-4 py-2 bg-white">{activeModal.deskripsi}</p>
                 <div className="mt-6 pt-4 border-t-[4px] border-black text-xl">
                   <span className="font-bold">ESTIMASI AWAL:</span> <span className="font-black text-2xl bg-black text-[#e5ff00] px-3 py-1 ml-2 shadow-[4px_4px_0_0_#ff003c]">RP {activeModal.estimasiAnggaran.toLocaleString('id-ID')}</span>
+                </div>
+                
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-bold border-t-[4px] border-black pt-4">
+                  <div className="border-[2px] border-black p-3 bg-white">
+                    <span className="text-gray-500 uppercase tracking-widest block text-xs">Capaian</span>
+                    <span>{activeModal.capaian || "-"}</span>
+                  </div>
+                  <div className="border-[2px] border-black p-3 bg-white">
+                    <span className="text-gray-500 uppercase tracking-widest block text-xs">Target & Baseline</span>
+                    <span>{activeModal.baseLine || 0}% &rarr; {activeModal.target || 0}%</span>
+                  </div>
+                  <div className="border-[2px] border-black p-3 bg-white">
+                    <span className="text-gray-500 uppercase tracking-widest block text-xs">Waktu Pelaksanaan</span>
+                    <span>{activeModal.waktuPelaksanaan ? String(activeModal.waktuPelaksanaan).split(',').join(' s/d ') : "-"}</span>
+                  </div>
+                  <div className="border-[2px] border-black p-3 bg-white">
+                    <span className="text-gray-500 uppercase tracking-widest block text-xs">Sasaran</span>
+                    <span>{activeModal.sasaran || "-"}</span>
+                  </div>
+                  <div className="border-[2px] border-black p-3 bg-white md:col-span-2">
+                    <span className="text-gray-500 uppercase tracking-widest block text-xs">Peserta / Mitra</span>
+                    <span>{activeModal.pesertaMitra || "-"}</span>
+                  </div>
                 </div>
               </div>
 
