@@ -24,19 +24,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "File bukti tidak ditemukan" }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    try {
-      await fs.access(uploadDir);
-    } catch {
-      await fs.mkdir(uploadDir, { recursive: true });
-    }
-
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const fileName = `bukti-${id}-${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
-    const filePath = path.join(uploadDir, fileName);
-    await fs.writeFile(filePath, buffer);
-    const buktiUrl = `/uploads/${fileName}`;
+    
+    // Vercel Serverless doesn't support writing to /public/uploads
+    // Convert to Base64 data URI to store directly in MongoDB
+    const mimeType = file.type || "application/octet-stream";
+    const base64Data = buffer.toString("base64");
+    const buktiUrl = `data:${mimeType};base64,${base64Data}`;
 
     await connectToDatabase();
     

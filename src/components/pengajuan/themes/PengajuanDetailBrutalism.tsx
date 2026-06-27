@@ -53,7 +53,11 @@ export default function PengajuanDetailBrutalism(props: any) {
               <div>
                 <p className="text-lg font-black uppercase mb-2 text-black">Pengusul</p>
                 <p className="text-2xl font-bold text-black uppercase border-[4px] border-black bg-slate-100 p-4">
-                  {p.pengusulId?.namaLengkap} <span className="text-slate-500">({p.pengusulId?.divisi})</span>
+                  {p.pengusulId?.namaLengkap}{" "}
+                  {(() => {
+                    const info = p.pengusulId?.unitId?.namaUnit || (p.pengusulId?.divisi && p.pengusulId?.divisi !== "-" ? p.pengusulId.divisi : null) || p.pengusulId?.role;
+                    return info ? <span className="text-slate-500">({info})</span> : null;
+                  })()}
                 </p>
               </div>
               <div className="col-span-1 md:col-span-2">

@@ -28,22 +28,14 @@ export async function POST(req: Request) {
     let rab = JSON.parse(rabString);
     const totalNominal = rab.reduce((acc: number, item: any) => acc + (item.total || 0), 0);
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    try {
-      await fs.access(uploadDir);
-    } catch {
-      await fs.mkdir(uploadDir, { recursive: true });
-    }
-
     for (let i = 0; i < rab.length; i++) {
       const file = formData.get(`file_${i}`) as File | null;
       if (file) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
-        const filePath = path.join(uploadDir, fileName);
-        await fs.writeFile(filePath, buffer);
-        rab[i].lampiran = `/uploads/${fileName}`;
+        const mimeType = file.type || "application/octet-stream";
+        const base64Data = buffer.toString("base64");
+        rab[i].lampiran = `data:${mimeType};base64,${base64Data}`;
       }
     }
 

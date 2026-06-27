@@ -29,6 +29,20 @@ async function seed() {
         namaLengkap: "Admin KASPRO",
         divisi: "Pusdatin",
         role: "admin",
+      },
+      {
+        username: "ketua",
+        password: await bcrypt.hash("123", 10),
+        namaLengkap: "Ketua KASPRO",
+        divisi: "Pimpinan",
+        role: "ketua",
+      },
+      {
+        username: "testuser",
+        password: await bcrypt.hash("123", 10),
+        namaLengkap: "Test User",
+        divisi: "-",
+        role: "user",
       }
     ];
 
