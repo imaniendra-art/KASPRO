@@ -50,6 +50,15 @@ export default function DetailPengajuan() {
   const [nominalDisetujui, setNominalDisetujui] = useState<number>(0);
   const [potongPaguMaster, setPotongPaguMaster] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editedRab, setEditedRab] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (data?.data?.rab) {
+      setEditedRab(data.data.rab);
+      const sum = data.data.rab.reduce((acc: number, item: any) => acc + (Number(item.total) || 0), 0);
+      setNominalDisetujui(sum);
+    }
+  }, [data]);
 
   const handleAction = async (aksi: string, newStatus: string) => {
     setIsSubmitting(true);
@@ -128,16 +137,6 @@ export default function DetailPengajuan() {
 
   const p = data.data;
   const logs = data.logs;
-
-  const [editedRab, setEditedRab] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (data?.data?.rab) {
-      setEditedRab(data.data.rab);
-      const sum = data.data.rab.reduce((acc: number, item: any) => acc + (Number(item.total) || 0), 0);
-      setNominalDisetujui(sum);
-    }
-  }, [data]);
 
   const handleEditRabItem = (index: number, field: string, value: any) => {
     const newRab = [...editedRab];
