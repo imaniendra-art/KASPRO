@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectToDatabase from "./db";
 import User from "../models/User";
+import "../models/Unit"; // Ensure Unit schema is registered for populate
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
