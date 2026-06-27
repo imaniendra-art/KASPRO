@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
@@ -61,7 +61,8 @@ export default function DetailPengajuan() {
         catatanAdmin,
         catatanUser,
         totalDisetujui: nominalDisetujui || data.data.totalNominal,
-        potongPaguMaster
+        potongPaguMaster,
+        rab: editedRab
       };
 
       const res = await fetch(`/api/pengajuan/${params.id}`, {
@@ -128,6 +129,34 @@ export default function DetailPengajuan() {
   const p = data.data;
   const logs = data.logs;
 
+  const [editedRab, setEditedRab] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (data?.data?.rab) {
+      setEditedRab(data.data.rab);
+      const sum = data.data.rab.reduce((acc: number, item: any) => acc + (Number(item.total) || 0), 0);
+      setNominalDisetujui(sum);
+    }
+  }, [data]);
+
+  const handleEditRabItem = (index: number, field: string, value: any) => {
+    const newRab = [...editedRab];
+    newRab[index][field] = value;
+    if (field === "jumlah" || field === "hargaSatuan") {
+      newRab[index].total = Number(newRab[index].jumlah || 0) * Number(newRab[index].hargaSatuan || 0);
+    }
+    setEditedRab(newRab);
+    const sum = newRab.reduce((acc: number, item: any) => acc + (Number(item.total) || 0), 0);
+    setNominalDisetujui(sum);
+  };
+
+  const handleDeleteRabItem = (index: number) => {
+    const newRab = editedRab.filter((_, i) => i !== index);
+    setEditedRab(newRab);
+    const sum = newRab.reduce((acc: number, item: any) => acc + (Number(item.total) || 0), 0);
+    setNominalDisetujui(sum);
+  };
+
   const isAdmin = role === "admin";
   const isKetua = role === "ketua";
   const needsAdminAction = isAdmin && p.status === "Review Admin";
@@ -143,7 +172,8 @@ export default function DetailPengajuan() {
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
     potongPaguMaster, setPotongPaguMaster,
-    isSubmitting, handleAction, handleUploadBukti
+    isSubmitting, handleAction, handleUploadBukti, getStatusColor,
+    editedRab, handleEditRabItem, handleDeleteRabItem
   };
 
   if (theme === "theme-brutalism") {

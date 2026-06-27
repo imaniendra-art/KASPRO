@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, XCircle, Clock, Upload, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Upload, Loader2, Trash2 } from "lucide-react";
 
 export default function PengajuanDetailMinimalist(props: any) {
   const { 
@@ -11,7 +11,9 @@ export default function PengajuanDetailMinimalist(props: any) {
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
     potongPaguMaster, setPotongPaguMaster,
-    isSubmitting, handleAction, handleUploadBukti 
+
+    isSubmitting, handleAction, handleUploadBukti,
+    editedRab, handleEditRabItem, handleDeleteRabItem
   } = props;
 
   return (
@@ -46,17 +48,46 @@ export default function PengajuanDetailMinimalist(props: any) {
             <tr>
               <th className="p-3">Item</th>
               <th className="p-3">Jumlah</th>
-              <th className="p-3">Harga</th>
+              <th className="p-3">Harga Satuan</th>
               <th className="p-3">Total</th>
+              {isAdmin && <th className="p-3 w-10"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {p.rab?.map((item: any, i: number) => (
+            {(editedRab || p.rab)?.map((item: any, i: number) => (
               <tr key={i}>
-                <td className="p-3 text-gray-900 dark:text-gray-100">{item.namaItem}</td>
-                <td className="p-3 text-gray-500 dark:text-gray-400">{item.jumlah} {item.satuan}</td>
-                <td className="p-3 text-gray-500 dark:text-gray-400">Rp {item.hargaSatuan?.toLocaleString('id-ID')}</td>
+                <td className="p-3 text-gray-900 dark:text-gray-100">
+                  {isAdmin ? (
+                    <input type="text" value={item.namaItem} onChange={(e) => handleEditRabItem(i, 'namaItem', e.target.value)} className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  ) : (
+                    item.namaItem
+                  )}
+                </td>
+                <td className="p-3 text-gray-500 dark:text-gray-400">
+                  {isAdmin ? (
+                    <div className="flex items-center gap-1">
+                      <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} className="w-16 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      <input type="text" value={item.satuan} onChange={(e) => handleEditRabItem(i, 'satuan', e.target.value)} className="w-16 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="pcs" />
+                    </div>
+                  ) : (
+                    `${item.jumlah} ${item.satuan}`
+                  )}
+                </td>
+                <td className="p-3 text-gray-500 dark:text-gray-400">
+                  {isAdmin ? (
+                    <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} className="w-24 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  ) : (
+                    `Rp ${item.hargaSatuan?.toLocaleString('id-ID')}`
+                  )}
+                </td>
                 <td className="p-3 text-gray-900 dark:text-gray-100 font-medium">Rp {item.total?.toLocaleString('id-ID')}</td>
+                {isAdmin && (
+                  <td className="p-3 text-right">
+                    <button onClick={() => handleDeleteRabItem(i)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, FileText, Loader2, MessageSquare, Send, User, Wallet, XCircle, Upload } from "lucide-react";
+import { CheckCircle, Clock, FileText, Loader2, MessageSquare, Send, User, Wallet, XCircle, Upload, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,8 +11,10 @@ export default function PengajuanDetailBrutalism(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
+
     potongPaguMaster, setPotongPaguMaster,
-    isSubmitting, handleAction, handleUploadBukti
+    isSubmitting, handleAction, handleUploadBukti,
+    editedRab, handleEditRabItem, handleDeleteRabItem
   } = props;
   
   const router = useRouter();
@@ -86,22 +88,49 @@ export default function PengajuanDetailBrutalism(props: any) {
                     <th className="pb-4 px-4 text-xl font-black uppercase text-black border-r-[4px] border-black">Jml</th>
                     <th className="pb-4 px-4 text-xl font-black uppercase text-black border-r-[4px] border-black whitespace-nowrap">Harga Satuan</th>
                     <th className="pb-4 pl-4 text-xl font-black uppercase text-black text-right">Total</th>
+                    {isAdmin && <th className="pb-4 pl-4 text-xl font-black uppercase text-black text-right w-12"></th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y-[4px] divide-black">
-                  {p.rab.map((item: any, i: number) => (
+                  {(editedRab || p.rab).map((item: any, i: number) => (
                     <tr key={i} className="hover:bg-slate-100">
                       <td className="py-4 pr-4 border-r-[4px] border-black text-xl font-bold text-black uppercase">
-                        {item.namaItem}
+                        {isAdmin ? (
+                          <input type="text" value={item.namaItem} onChange={(e) => handleEditRabItem(i, 'namaItem', e.target.value)} className="w-full bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
+                        ) : (
+                          item.namaItem
+                        )}
                         {item.lampiran && (
                           <a href={item.lampiran} target="_blank" rel="noopener noreferrer" className="ml-2 inline-flex items-center text-[#ff003c] hover:text-black transition-colors" title="Lihat Lampiran">
                             <FileText className="w-5 h-5" />
                           </a>
                         )}
                       </td>
-                      <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">{item.jumlah} {item.satuan}</td>
-                      <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">RP {item.hargaSatuan.toLocaleString("id-ID")}</td>
+                      <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">
+                        {isAdmin ? (
+                          <div className="flex items-center gap-2">
+                            <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} className="w-20 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
+                            <input type="text" value={item.satuan} onChange={(e) => handleEditRabItem(i, 'satuan', e.target.value)} className="w-20 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" placeholder="pcs" />
+                          </div>
+                        ) : (
+                          `${item.jumlah} ${item.satuan}`
+                        )}
+                      </td>
+                      <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">
+                        {isAdmin ? (
+                          <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} className="w-32 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
+                        ) : (
+                          `RP ${item.hargaSatuan.toLocaleString("id-ID")}`
+                        )}
+                      </td>
                       <td className="py-4 pl-4 font-black text-black text-xl text-right whitespace-nowrap">RP {item.total.toLocaleString("id-ID")}</td>
+                      {isAdmin && (
+                        <td className="py-4 pl-4 text-right">
+                          <button onClick={() => handleDeleteRabItem(i)} className="p-2 border-[4px] border-black bg-red-500 hover:bg-black text-white transition-colors">
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -51,7 +51,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    const { status, aksi, totalDisetujui, catatanUmum, catatanAdmin, catatanUser, potongPaguMaster } = await req.json();
+    const { status, aksi, totalDisetujui, catatanUmum, catatanAdmin, catatanUser, potongPaguMaster, rab } = await req.json();
 
     await connectToDatabase();
 
@@ -89,6 +89,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (status) pengajuan.status = status;
     if (totalDisetujui !== undefined) pengajuan.totalDisetujui = totalDisetujui;
     if (potongPaguMaster !== undefined) pengajuan.potongPaguMaster = potongPaguMaster;
+    if (rab) pengajuan.rab = rab;
     await pengajuan.save();
 
     // Create Approval Log
