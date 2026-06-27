@@ -129,7 +129,7 @@ export default function DaftarProker() {
   };
 
   const kirimSemuaAjuan = async () => {
-    const drafts = data?.filter((item: any) => item.status === "Draft") || [];
+    const drafts = data?.data?.filter((item: any) => item.status === "Draft") || [];
     if (drafts.length === 0) {
       alert("Tidak ada draf yang bisa diajukan.");
       return;
