@@ -16,6 +16,7 @@ export default function BrutalismLayout({ children }: { children: React.ReactNod
     { name: "Program Kerja", href: "/proker", roles: ["user", "admin", "ketua"] },
     { name: "Pengajuan Dana", href: "/pengajuan", roles: ["user", "admin", "ketua"] },
     { name: "Pengaturan Sistem", href: "/settings", roles: ["admin"] },
+    { name: "Bantuan & Tentang", href: "/about", roles: ["user", "admin", "ketua"] },
   ];
 
   const filteredMenus = menuItems.filter(item => item.roles.includes(userRole));

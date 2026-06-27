@@ -30,7 +30,8 @@ export default function MinimalistLayout({ children }: { children: React.ReactNo
     { name: "Program Kerja", href: "/proker" },
     ...(session?.user?.role === "admin" ? [
       { name: "Pengaturan", href: "/settings" },
-    ] : [])
+    ] : []),
+    { name: "Bantuan & Tentang", href: "/about" },
   ];
 
   const roleName = session?.user?.role === "admin" ? "Admin" : session?.user?.role === "ketua" ? "Ketua" : "User";
@@ -96,12 +97,38 @@ export default function MinimalistLayout({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <main className="flex-1">
-          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 pb-20 md:pb-8">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
             {children}
           </div>
         </main>
         
+        {/* Mobile Bottom Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700 z-50 flex justify-around items-center h-16 px-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            
+            // Map icons based on name
+            let Icon: any = null;
+            if (item.name === "Dashboard") Icon = require("lucide-react").LayoutDashboard;
+            if (item.name === "Pengajuan Dana") Icon = require("lucide-react").WalletCards;
+            if (item.name === "Program Kerja") Icon = require("lucide-react").FileText;
+            if (item.name === "Pengaturan") Icon = require("lucide-react").Settings;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                  isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"
+                }`}
+              >
+                {Icon && <Icon className={`w-5 h-5 ${isActive ? "scale-110" : ""}`} />}
+                <span className="text-[10px] font-medium text-center">{item.name === "Pengajuan Dana" ? "Pengajuan" : item.name === "Program Kerja" ? "Proker" : item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ import {
   PieChart, 
   LogOut,
   Wallet,
-  Settings
+  Settings,
+  Info
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -24,6 +25,9 @@ const menuItems = [
   
   // Menu Khusus Admin
   { name: "Pengaturan Sistem", href: "/settings", icon: Settings, roles: ["admin"] },
+
+  // Bantuan
+  { name: "Bantuan & Tentang", href: "/about", icon: Info, roles: ["admin", "ketua", "user"] },
 ];
 
 export default function Sidebar() {
