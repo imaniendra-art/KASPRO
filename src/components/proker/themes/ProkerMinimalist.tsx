@@ -104,7 +104,18 @@ export default function ProkerMinimalist(props: any) {
         {isUser && (
           <div className="flex gap-2">
             <button onClick={kirimSemuaAjuan} className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors text-sm font-medium">Kirim Draf</button>
-            <button onClick={() => setIsCreating(!isCreating)} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium">
+            <button 
+              onClick={() => {
+                if (!props.hasActivePeriode) {
+                   alert("Tidak bisa membuat proker: Belum ada Periode Anggaran yang aktif. Harap hubungi Admin Keuangan.");
+                   return;
+                }
+                setIsCreating(!isCreating);
+              }} 
+              disabled={!props.hasActivePeriode}
+              className={`px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium ${props.hasActivePeriode ? 'bg-blue-600 text-white hover:bg-blue-700 transition-colors' : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500'}`}
+              title={!props.hasActivePeriode ? "Belum ada periode anggaran aktif" : ""}
+            >
               <Plus className="w-4 h-4" /> Buat Proker
             </button>
           </div>

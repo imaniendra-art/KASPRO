@@ -13,7 +13,7 @@ const fetchProker = async () => {
   const res = await fetch("/api/proker");
   const json = await res.json();
   if (!res.ok) throw new Error(json.error);
-  return json.data;
+  return json;
 };
 
 
@@ -179,8 +179,11 @@ export default function DaftarProker() {
 
   const { theme } = useTheme();
 
+  const prokerData = data?.data || [];
+  const hasActivePeriode = data?.hasActivePeriode || false;
+
   const props = {
-    data, isLoading, error, session,
+    data: prokerData, hasActivePeriode, isLoading, error, session,
     isCreating, setIsCreating,
     judul, setJudul, deskripsi, setDeskripsi,
     capaian, setCapaian, baseLine, setBaseLine, target, setTarget,

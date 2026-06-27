@@ -84,11 +84,19 @@ export default function ProkerBrutalism(props: any) {
               <Send className="w-8 h-8" /> KIRIM SEMUA AJUAN
             </button>
             <button 
-              onClick={() => setIsCreating(!isCreating)}
-              className="border-[4px] border-black px-8 py-4 bg-[#ff003c] text-white font-black text-2xl uppercase hover:bg-black transition-colors text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[8px] hover:translate-y-[8px] flex items-center justify-center gap-3 group"
+              onClick={() => {
+                if (!props.hasActivePeriode) {
+                   alert("TIDAK BISA MEMBUAT PROKER: BELUM ADA PERIODE ANGGARAN YANG AKTIF!");
+                   return;
+                }
+                setIsCreating(!isCreating);
+              }}
+              disabled={!props.hasActivePeriode}
+              className={`border-[4px] border-black px-8 py-4 ${props.hasActivePeriode ? 'bg-[#ff003c] text-white hover:bg-black hover:text-[#ff003c] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[8px] hover:translate-y-[8px]' : 'bg-gray-400 text-gray-700 cursor-not-allowed shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]'} font-black text-2xl uppercase transition-colors text-center flex items-center justify-center gap-3 group`}
+              title={!props.hasActivePeriode ? "Belum ada periode anggaran aktif" : ""}
             >
-              <Plus className="w-8 h-8 group-hover:text-[#ff003c] transition-colors" />
-              <span className="group-hover:text-[#ff003c] transition-colors">{isCreating ? "BATAL BUAT" : "BUAT DRAF BARU"}</span>
+              <Plus className={`w-8 h-8 ${props.hasActivePeriode ? 'group-hover:text-[#ff003c]' : ''} transition-colors`} />
+              <span className={`${props.hasActivePeriode ? 'group-hover:text-[#ff003c]' : ''} transition-colors`}>{isCreating ? "BATAL BUAT" : "BUAT DRAF BARU"}</span>
             </button>
           </div>
         )}

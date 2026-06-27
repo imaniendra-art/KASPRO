@@ -21,13 +21,13 @@ export default function SettingsBrutalism(props: any) {
     userPassword, setUserPassword,
     userRole, setUserRole,
     userUnitId, setUserUnitId,
-    submittingUser, handleCreateOrUpdateUser, handleDeleteUser,
-    handleEditUserClick, resetUserForm,
+    submittingUser, handleCreateUser, deleteUser,
+    openEditUser, closeUserForm,
 
     // Unit management
     units, isLoadingUnits,
     newUnitName, setNewUnitName,
-    addingUnit, handleAddUnit, handleDeleteUnit
+    addingUnit, handleAddUnit, deleteUnit
   } = props;
 
   const [activeTab, setActiveTab] = useState<'periode' | 'users' | 'units'>('periode');
@@ -192,11 +192,9 @@ export default function SettingsBrutalism(props: any) {
             <button 
               onClick={() => {
                 if(isCreatingUser) {
-                  resetUserForm();
-                  setIsCreatingUser(false);
-                  setEditingUserId(null);
+                  closeUserForm();
                 } else {
-                  resetUserForm();
+                  closeUserForm();
                   setIsCreatingUser(true);
                 }
               }}
@@ -207,7 +205,7 @@ export default function SettingsBrutalism(props: any) {
           </div>
 
           {isCreatingUser && (
-            <form onSubmit={handleCreateOrUpdateUser} className="mb-12 bg-[#ff003c] border-[4px] border-black p-6 md:p-8 shadow-[6px_6px_0_0_#000] text-white">
+            <form onSubmit={handleCreateUser} className="mb-12 bg-[#ff003c] border-[4px] border-black p-6 md:p-8 shadow-[6px_6px_0_0_#000] text-white">
               <h3 className="text-2xl font-black uppercase mb-6 border-b-[4px] border-white pb-2 inline-block">
                 {editingUserId ? "EDIT PENGGUNA" : "TAMBAH PENGGUNA"}
               </h3>
@@ -218,7 +216,7 @@ export default function SettingsBrutalism(props: any) {
                     type="text" 
                     value={userName}
                     onChange={e => setUserName(e.target.value)}
-                    className="w-full bg-black border-[4px] border-white py-3 px-4 text-xl font-bold text-white focus:outline-none focus:bg-white focus:text-black transition-colors"
+                    className="w-full bg-white border-[4px] border-black py-3 px-4 text-xl font-bold text-black focus:outline-none focus:bg-[#e5ff00] transition-colors"
                     required
                   />
                 </div>
@@ -228,7 +226,7 @@ export default function SettingsBrutalism(props: any) {
                     type="text" 
                     value={userUsername}
                     onChange={e => setUserUsername(e.target.value)}
-                    className="w-full bg-black border-[4px] border-white py-3 px-4 text-xl font-bold text-white focus:outline-none focus:bg-white focus:text-black transition-colors"
+                    className="w-full bg-white border-[4px] border-black py-3 px-4 text-xl font-bold text-black focus:outline-none focus:bg-[#e5ff00] transition-colors"
                     required
                   />
                 </div>
@@ -240,7 +238,7 @@ export default function SettingsBrutalism(props: any) {
                     type="password" 
                     value={userPassword}
                     onChange={e => setUserPassword(e.target.value)}
-                    className="w-full bg-black border-[4px] border-white py-3 px-4 text-xl font-bold text-white focus:outline-none focus:bg-white focus:text-black transition-colors"
+                    className="w-full bg-white border-[4px] border-black py-3 px-4 text-xl font-bold text-black focus:outline-none focus:bg-[#e5ff00] transition-colors"
                     required={!editingUserId}
                   />
                 </div>
@@ -252,7 +250,7 @@ export default function SettingsBrutalism(props: any) {
                       setUserRole(e.target.value);
                       if (e.target.value !== "user") setUserUnitId("");
                     }}
-                    className="w-full bg-black border-[4px] border-white py-3 px-4 text-xl font-bold text-white focus:outline-none focus:bg-white focus:text-black transition-colors appearance-none"
+                    className="w-full bg-white border-[4px] border-black py-3 px-4 text-xl font-bold text-black focus:outline-none focus:bg-[#e5ff00] transition-colors appearance-none"
                     required
                   >
                     <option value="user">USER / TENDIK</option>
@@ -267,7 +265,7 @@ export default function SettingsBrutalism(props: any) {
                     <select 
                       value={userUnitId}
                       onChange={e => setUserUnitId(e.target.value)}
-                      className="w-full bg-black border-[4px] border-white py-3 px-4 text-xl font-bold text-white focus:outline-none focus:bg-white focus:text-black transition-colors appearance-none"
+                      className="w-full bg-white border-[4px] border-black py-3 px-4 text-xl font-bold text-black focus:outline-none focus:bg-[#e5ff00] transition-colors appearance-none"
                       required
                     >
                       <option value="">-- PILIH UNIT --</option>
@@ -318,12 +316,12 @@ export default function SettingsBrutalism(props: any) {
                       </td>
                       <td className="p-4 text-center space-x-2">
                         <button onClick={() => {
-                          handleEditUserClick(u);
+                          openEditUser(u);
                           setActiveTab('users');
                         }} className="p-2 border-[4px] border-black bg-white hover:bg-black hover:text-[#e5ff00] transition-colors inline-block" title="Edit">
                           <Edit className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleDeleteUser(u._id)} className="p-2 border-[4px] border-black bg-white hover:bg-[#ff003c] hover:text-white transition-colors inline-block" title="Hapus">
+                        <button onClick={() => deleteUser(u._id)} className="p-2 border-[4px] border-black bg-white hover:bg-[#ff003c] hover:text-white transition-colors inline-block" title="Hapus">
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </td>

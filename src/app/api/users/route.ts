@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import Unit from "@/models/Unit";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
@@ -47,13 +48,23 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let finalUnitId = role === "user" ? unitId : undefined;
+
+    if (role === "ketua") {
+      const pimpinanUnit = await Unit.findOneAndUpdate({ namaUnit: "Pimpinan" }, { namaUnit: "Pimpinan" }, { upsert: true, new: true });
+      finalUnitId = pimpinanUnit._id;
+    } else if (role === "admin") {
+      const keuanganUnit = await Unit.findOneAndUpdate({ namaUnit: "Keuangan" }, { namaUnit: "Keuangan" }, { upsert: true, new: true });
+      finalUnitId = keuanganUnit._id;
+    }
+
     const user = new User({
       namaLengkap,
       username,
       password: hashedPassword,
       role,
       divisi: '-',
-      unitId: role === "user" ? unitId : undefined
+      unitId: finalUnitId
     });
 
     await user.save();

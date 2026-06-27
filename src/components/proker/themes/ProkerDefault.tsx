@@ -130,8 +130,16 @@ export default function ProkerDefault(props: any) {
               <span>Kirim Semua Ajuan</span>
             </button>
             <button 
-              onClick={() => setIsCreating(!isCreating)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 w-max"
+              onClick={() => {
+                if (!props.hasActivePeriode) {
+                   alert("Tidak bisa membuat proker: Belum ada Periode Anggaran yang aktif. Harap hubungi Admin Keuangan.");
+                   return;
+                }
+                setIsCreating(!isCreating);
+              }}
+              disabled={!props.hasActivePeriode}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg w-max ${props.hasActivePeriode ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-purple-500/20 hover:shadow-purple-500/40' : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 shadow-none'}`}
+              title={!props.hasActivePeriode ? "Belum ada periode anggaran aktif" : ""}
             >
               <Plus className="w-5 h-5" />
               <span>Buat Draf Proker</span>

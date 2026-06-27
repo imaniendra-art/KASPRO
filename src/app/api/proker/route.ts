@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     const prokers = await Proker.find(query).populate({ path: "pengusulId", select: "namaLengkap divisi role unitId", populate: { path: "unitId", select: "namaUnit" } }).sort({ createdAt: -1 });
 
-    return NextResponse.json({ data: prokers }, { status: 200 });
+    return NextResponse.json({ data: prokers, hasActivePeriode: !!activePeriode }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

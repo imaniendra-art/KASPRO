@@ -7,6 +7,7 @@ export interface IUser extends Document {
   divisi: string;
   role: 'admin' | 'ketua' | 'user';
   unitId?: mongoose.Types.ObjectId;
+  isSuperAdmin?: boolean;
 }
 
 const UserSchema: Schema = new Schema({
@@ -20,7 +21,8 @@ const UserSchema: Schema = new Schema({
     enum: ['admin', 'ketua', 'user'],
     default: 'user'
   },
-  unitId: { type: mongoose.Schema.Types.ObjectId, ref: 'Unit' }
+  unitId: { type: mongoose.Schema.Types.ObjectId, ref: 'Unit' },
+  isSuperAdmin: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

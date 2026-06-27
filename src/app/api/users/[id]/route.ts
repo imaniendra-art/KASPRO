@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import Unit from "@/models/Unit";
 import bcrypt from "bcryptjs";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -36,8 +37,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (session.user?.role === "admin") {
       if (namaLengkap !== undefined) user.namaLengkap = namaLengkap;
       if (role !== undefined) user.role = role;
-      if (unitId !== undefined) user.unitId = role === "user" ? unitId : undefined;
-      if (role && role !== "user") user.unitId = undefined;
+      
+      if (!user.isSuperAdmin) {
+        if (user.role === "ketua") {
+          const pimpinanUnit = await Unit.findOneAndUpdate({ namaUnit: "Pimpinan" }, { namaUnit: "Pimpinan" }, { upsert: true, new: true });
+          user.unitId = pimpinanUnit._id;
+        } else if (user.role === "admin") {
+          const keuanganUnit = await Unit.findOneAndUpdate({ namaUnit: "Keuangan" }, { namaUnit: "Keuangan" }, { upsert: true, new: true });
+          user.unitId = keuanganUnit._id;
+        } else if (user.role === "user") {
+          if (unitId !== undefined) user.unitId = unitId;
+        }
+      }
     }
 
     await user.save();
@@ -63,6 +74,15 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     // Prevent deleting self
     if (resolvedParams.id === session.user.id) {
       return NextResponse.json({ error: "Tidak bisa menghapus akun sendiri" }, { status: 400 });
+    }
+
+    const userToDelete = await User.findById(resolvedParams.id);
+    if (!userToDelete) {
+      return NextResponse.json({ error: "User tidak ditemukan" }, { status: 404 });
+    }
+
+    if (userToDelete.isSuperAdmin) {
+      return NextResponse.json({ error: "Akun Super Admin tidak bisa dihapus" }, { status: 403 });
     }
 
     await User.findByIdAndDelete(resolvedParams.id);
