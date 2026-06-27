@@ -377,7 +377,7 @@ export default function SettingsBrutalism(props: any) {
                     {u.namaUnit}
                   </h3>
                   <button 
-                    onClick={() => handleDeleteUnit(u._id)}
+                    onClick={() => deleteUnit(u._id)}
                     className="p-3 border-[4px] border-black bg-white hover:bg-[#ff003c] hover:text-white transition-colors"
                     title="Hapus Unit"
                   >
