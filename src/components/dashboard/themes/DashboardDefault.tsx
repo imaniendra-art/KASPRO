@@ -72,7 +72,9 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
     setModalData(null);
   };
 
-  const adminCards = [
+  type StatCard = { title: string; value: string | number; subtitle?: string; icon: any; color: string; };
+
+  const adminCards: StatCard[] = [
     { title: "Sisa Pagu Master", value: `Rp ${stats?.sisaKas?.toLocaleString('id-ID') || "0"}`, icon: Wallet, color: "from-blue-500 to-cyan-500" },
     { title: "Total Pengeluaran Proker", value: `Rp ${stats?.totalPengeluaran?.toLocaleString('id-ID') || "0"}`, icon: Clock, color: "from-orange-500 to-amber-500" },
     { title: "Total Pengeluaran Non-Pagu", value: `Rp ${stats?.totalPengeluaranNonPagu?.toLocaleString('id-ID') || "0"}`, icon: Clock, color: "from-red-500 to-rose-500" },
@@ -80,7 +82,7 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
     { title: "Total Pagu Master", value: `Rp ${stats?.totalKas?.toLocaleString('id-ID') || "0"}`, icon: TrendingUp, color: "from-purple-500 to-pink-500" },
   ];
 
-  const userCards = [
+  const userCards: StatCard[] = [
     { title: "Rencana Proker", value: `Rp ${stats?.rencanaProker?.toLocaleString('id-ID') || "0"}`, subtitle: `Dana Proker Cair: Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: FileText, color: "from-blue-500 to-cyan-500" },
     { title: "Total Diajukan", value: `Rp ${stats?.totalDiajukan?.toLocaleString('id-ID') || "0"}`, icon: List, color: "from-orange-500 to-amber-500" },
     { title: "Dana Proker Cair", value: `Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-emerald-500 to-teal-500" },
