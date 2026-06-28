@@ -17,7 +17,7 @@ export interface IPengajuan extends Document {
   pengusulId: mongoose.Types.ObjectId;
   totalNominal: number;
   totalDisetujui: number;
-  status: 'Review Admin' | 'Menunggu Ketua' | 'Disetujui Ketua' | 'Dicairkan' | 'Ditolak' | 'Selesai';
+  status: 'Review Admin' | 'Menunggu Ketua' | 'Disetujui Ketua' | 'Diproses Keuangan' | 'Dicairkan' | 'LPJ Diperiksa' | 'Ditolak' | 'Selesai';
   rab: IRabItem[];
   buktiLpj?: string;
   potongPaguMaster?: boolean;
@@ -43,7 +43,7 @@ const PengajuanSchema: Schema = new Schema({
   status: { 
     type: String, 
     required: true, 
-    enum: ['Review Admin', 'Menunggu Ketua', 'Disetujui Ketua', 'Dicairkan', 'Ditolak', 'Selesai'],
+    enum: ['Review Admin', 'Menunggu Ketua', 'Disetujui Ketua', 'Diproses Keuangan', 'Dicairkan', 'LPJ Diperiksa', 'Ditolak', 'Selesai'],
     default: 'Review Admin'
   },
   buktiLpj: { type: String },

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, ChevronDown, ChevronUp, Loader2, Info, CheckCircle, XCircle } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ChevronRight, Loader2, Info, CheckCircle, XCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function ProkerMinimalist(props: any) {
@@ -18,6 +18,7 @@ export default function ProkerMinimalist(props: any) {
   const isAdmin = session?.user?.role === "admin";
   const isUser = session?.user?.role === "user";
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
   const [waktuMulai, setWaktuMulai] = useState("");
   const [waktuSelesai, setWaktuSelesai] = useState("");
@@ -251,11 +252,10 @@ export default function ProkerMinimalist(props: any) {
         ) : (!data || data.length === 0) ? (
           <div className="p-12 text-center text-gray-500">Belum ada program kerja yang dibuat.</div>
         ) : (
-          Object.entries(groupedData).map(([pengusulName, prokers]: [string, any]) => (
-            <div key={pengusulName} className="space-y-3">
-              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">{pengusulName}</h2>
+          (() => {
+            const renderCards = (prokerList: any[]) => (
               <div className="flex flex-col gap-3">
-                {prokers.map((proker: any) => (
+                {prokerList.map((proker: any) => (
                   <div key={proker._id} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div className="w-full md:w-1/3 space-y-1">
@@ -370,8 +370,81 @@ export default function ProkerMinimalist(props: any) {
                   </div>
                 ))}
               </div>
-            </div>
-          ))
+            );
+
+            if (isKetua) {
+              const ketuaGroupedData = data.reduce((acc: any, item: any) => {
+                const pengusulInfo = item.pengusulId;
+                const unitName = pengusulInfo?.unitId?.namaUnit || pengusulInfo?.divisi || pengusulInfo?.role || "-";
+                const nama = pengusulInfo?.namaLengkap || "Tanpa Nama";
+                const groupKey = `${nama} (${unitName})`;
+                
+                if (!acc[groupKey]) {
+                  acc[groupKey] = {
+                    namaLengkap: nama,
+                    divisi: unitName,
+                    totalProker: 0,
+                    totalAnggaran: 0,
+                    items: []
+                  };
+                }
+                
+                acc[groupKey].items.push(item);
+                acc[groupKey].totalProker += 1;
+                acc[groupKey].totalAnggaran += (item.estimasiAnggaran || 0);
+                
+                return acc;
+              }, {});
+
+              return (
+                <div className="flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                  {Object.entries(ketuaGroupedData).map(([key, group]: [string, any]) => {
+                    const isExpanded = expandedGroup === key;
+                    return (
+                      <div key={key} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                        <div 
+                          onClick={() => setExpandedGroup(isExpanded ? null : key)}
+                          className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="text-gray-400">
+                              {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-gray-100">{group.namaLengkap}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{group.divisi}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Proker</p>
+                              <p className="text-gray-900 dark:text-gray-100 font-medium">{group.totalProker}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Total Anggaran</p>
+                              <p className="text-gray-900 dark:text-gray-100 font-bold">Rp {group.totalAnggaran.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div className="p-4 bg-gray-50/50 dark:bg-gray-900/30">
+                            {renderCards(group.items)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+
+            return Object.entries(groupedData).map(([pengusulName, prokers]: [string, any]) => (
+              <div key={pengusulName} className="space-y-3">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">{pengusulName}</h2>
+                {renderCards(prokers)}
+              </div>
+            ));
+          })()
         )}
       </div>
     </div>

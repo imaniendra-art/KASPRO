@@ -8,6 +8,8 @@ import Unit from "@/models/Unit";
 import fs from "fs/promises";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);

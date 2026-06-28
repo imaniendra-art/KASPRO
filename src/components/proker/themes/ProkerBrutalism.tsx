@@ -1,6 +1,6 @@
-import { FolderKanban, Loader2, Plus, Send, Trash2, Pencil, CheckCircle, XCircle, MessageSquare, AlertCircle, X, Eye, Info } from "lucide-react";
+import { FolderKanban, Loader2, Plus, Send, Trash2, Pencil, CheckCircle, XCircle, MessageSquare, AlertCircle, X, Eye, Info, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 export default function ProkerBrutalism(props: any) {
   const {
@@ -13,6 +13,37 @@ export default function ProkerBrutalism(props: any) {
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
     submitting, handleCreate, ajukanKeKeuangan, kirimSemuaAjuan, hapusDraft, handleValidasi, openEditModal
   } = props;
+  
+  const isKetua = session?.user?.role === "ketua";
+
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+
+  const groupedData = useMemo(() => {
+    if (!isKetua || !data) return null;
+    
+    return data.reduce((acc: any, item: any) => {
+      const pengusulInfo = item.pengusulId;
+      const unitName = pengusulInfo?.unitId?.namaUnit || pengusulInfo?.divisi || pengusulInfo?.role || "-";
+      const nama = pengusulInfo?.namaLengkap || "Tanpa Nama";
+      const groupKey = `${nama} (${unitName})`;
+      
+      if (!acc[groupKey]) {
+        acc[groupKey] = {
+          namaLengkap: nama,
+          divisi: unitName,
+          totalProker: 0,
+          totalAnggaran: 0,
+          items: []
+        };
+      }
+      
+      acc[groupKey].items.push(item);
+      acc[groupKey].totalProker += 1;
+      acc[groupKey].totalAnggaran += (item.estimasiAnggaran || 0);
+      
+      return acc;
+    }, {});
+  }, [data, isKetua]);
 
   const [activeModal, setActiveModal] = useState<any>(null);
   const [valAnggaran, setValAnggaran] = useState<number>(0);
@@ -361,78 +392,119 @@ export default function ProkerBrutalism(props: any) {
             BELUM ADA PROKER.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b-[4px] border-black bg-black">
-                  <th className="p-6 text-xl font-black uppercase border-r-[4px] border-white text-[#e5ff00]">PROGRAM KERJA</th>
-                  <th className="p-6 text-xl font-black uppercase border-r-[4px] border-white text-[#e5ff00] whitespace-nowrap">ESTIMASI</th>
-                  <th className="p-6 text-xl font-black uppercase border-r-[4px] border-white text-[#e5ff00] whitespace-nowrap">SISA PAGU</th>
-                  <th className="p-6 text-xl font-black uppercase border-r-[4px] border-white text-[#e5ff00]">STATUS</th>
-                  <th className="p-6 text-xl font-black uppercase text-right text-[#e5ff00]">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y-[4px] divide-black bg-[#f0f0f0]">
-                {data.map((item: any) => (
-                  <tr key={item._id} className="hover:bg-[#e5ff00] transition-colors group">
-                    <td className="p-6 border-r-[4px] border-black">
-                      <p className="text-2xl font-black uppercase leading-tight bg-white p-2 border-[3px] border-black inline-block shadow-[4px_4px_0_0_#000]">{item.judul}</p>
-                      {item.pengusulId?.namaLengkap && <p className="text-lg font-bold uppercase mt-4">OLEH: <span className="bg-black text-[#00ff88] px-2 py-1">{item.pengusulId?.namaLengkap}</span></p>}
-                      
-                      {item.catatan && (
-                        <div className="mt-4 p-4 border-[3px] border-black bg-white">
-                          <p className="font-black text-[#ff003c] flex items-center gap-2 mb-2"><MessageSquare className="w-5 h-5"/> CATATAN ADMIN</p>
-                          <p className="font-bold border-l-[4px] border-[#ff003c] pl-3">{item.catatan}</p>
+          (() => {
+            const renderTable = (tableData: any[]) => (
+              <div className="overflow-x-auto border-[4px] border-black bg-white shadow-[8px_8px_0_0_#000]">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-[4px] border-black bg-[#e5ff00]">
+                      <th className="p-6 text-xl font-black uppercase border-r-[4px] border-black">PROGRAM KERJA</th>
+                      <th className="p-6 text-xl font-black uppercase border-r-[4px] border-black">TUJUAN</th>
+                      <th className="p-6 text-xl font-black uppercase border-r-[4px] border-black whitespace-nowrap">ANGGARAN</th>
+                      <th className="p-6 text-xl font-black uppercase border-r-[4px] border-black whitespace-nowrap">SISA PAGU</th>
+                      <th className="p-6 text-xl font-black uppercase border-r-[4px] border-black">STATUS</th>
+                      <th className="p-6 text-xl font-black uppercase text-right">AKSI</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y-[4px] divide-black">
+                    {tableData.map((item: any) => (
+                      <tr key={item._id} className="hover:bg-slate-100 transition-colors group">
+                        <td className="p-6 border-r-[4px] border-black max-w-[300px]">
+                          <p className="text-2xl font-black uppercase leading-tight mb-2">{item.judul}</p>
+                          {session?.user?.role !== "user" && (
+                            <p className="text-sm font-bold uppercase bg-black text-[#e5ff00] inline-block px-2 py-1">
+                              OLEH: {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"})
+                            </p>
+                          )}
+                          {((session?.user?.role === "user" && item.status !== "Draft") || (["admin", "ketua"].includes(session?.user?.role) && item.status !== "Menunggu Validasi")) && (
+                            <button onClick={() => setViewRabModal(item)} className="mt-4 border-[3px] border-black bg-[#00ff88] px-4 py-2 text-sm font-black uppercase hover:bg-black hover:text-[#00ff88] transition-colors shadow-[4px_4px_0_0_#000] flex items-center gap-2">
+                              <Eye className="w-4 h-4" /> LIHAT RAB
+                            </button>
+                          )}
+                        </td>
+                        <td className="p-6 border-r-[4px] border-black max-w-[300px]">
+                          <div className="text-lg font-bold uppercase line-clamp-3 leading-snug">{item.deskripsi}</div>
+                          {item.catatan && (
+                            <div className="mt-4 bg-[#ff003c] text-white p-3 border-[3px] border-black shadow-[4px_4px_0_0_#000]">
+                              <span className="font-black flex items-center gap-2 mb-1 text-sm"><AlertCircle className="w-4 h-4" /> CATATAN ADMIN:</span>
+                              <span className="font-bold text-sm uppercase">{item.catatan}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-6 border-r-[4px] border-black text-2xl font-black uppercase bg-[#e5ff00] whitespace-nowrap">
+                          RP {item.estimasiAnggaran.toLocaleString('id-ID')}
+                        </td>
+                        <td className="p-6 border-r-[4px] border-black text-3xl font-black uppercase bg-[#00ff88] whitespace-nowrap">
+                          RP {item.sisaAnggaran.toLocaleString('id-ID')}
+                        </td>
+                        <td className="p-6 border-r-[4px] border-black">
+                          <span className="inline-block border-[4px] border-black px-4 py-2 text-lg font-black uppercase bg-white shadow-[4px_4px_0_0_#000]">
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="p-6 text-right h-full align-middle">
+                          <div className="flex flex-col items-end justify-center gap-3 min-h-[120px]">
+                            {session?.user?.role === "user" && (
+                              <>
+                                <button onClick={() => openEditModal(item)} className="border-[4px] border-black bg-white text-black px-6 py-2 text-lg font-black uppercase hover:bg-black hover:text-[#e5ff00] transition-colors shadow-[4px_4px_0_0_#000] group">
+                                  <Pencil className="w-6 h-6 mx-auto group-hover:text-[#e5ff00] transition-colors" />
+                                </button>
+                                <button onClick={() => hapusDraft(item._id)} className="border-[4px] border-black bg-black text-[#ff003c] px-6 py-2 hover:bg-[#ff003c] hover:text-black transition-colors shadow-[4px_4px_0_0_#000]" title="HAPUS">
+                                  <Trash2 className="w-6 h-6 mx-auto" />
+                                </button>
+                              </>
+                            )}
+                            
+                            {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
+                              <button onClick={() => openValidasiModal(item)} className="border-[4px] border-black bg-black text-[#e5ff00] px-6 py-4 text-xl font-black uppercase hover:bg-[#ff003c] hover:text-white transition-colors shadow-[6px_6px_0_0_#000]">
+                                VALIDASI
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+            
+            if (isKetua && groupedData) {
+              return (
+                <div className="flex flex-col">
+                  {Object.entries(groupedData).map(([key, group]: [string, any]) => {
+                    const isExpanded = expandedGroup === key;
+                    return (
+                      <div key={key} className="border-b-[4px] border-black last:border-b-0">
+                        <div 
+                          onClick={() => setExpandedGroup(isExpanded ? null : key)}
+                          className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white border-[4px] border-black shadow-[8px_8px_0_0_#000] mb-4 cursor-pointer hover:bg-[#e5ff00] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0_0_#000] transition-all gap-4"
+                        >
+                          <div className="flex items-center gap-4">
+                            <span className="text-3xl font-black">{isExpanded ? "[-]" : "[+]"}</span>
+                            <div>
+                              <p className="text-3xl font-black uppercase">{group.namaLengkap}</p>
+                              <p className="text-xl font-bold uppercase">{group.divisi}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col md:text-right gap-1 md:gap-0">
+                            <p className="text-xl font-bold uppercase">{group.totalProker} PROGRAM KERJA</p>
+                            <p className="text-3xl font-black uppercase text-[#ff003c]">RP {group.totalAnggaran.toLocaleString('id-ID')}</p>
+                          </div>
                         </div>
-                      )}
-                    </td>
-                    <td className="p-6 border-r-[4px] border-black text-2xl font-bold uppercase whitespace-nowrap h-full align-middle">
-                      <div className="flex flex-col md:flex-row md:items-center gap-4 min-h-[120px]">
-                        <span className="text-[#00ff88] drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">RP {item.estimasiAnggaran.toLocaleString('id-ID')}</span>
-                        {(item.rab && item.rab.length > 0) && (
-                          <button 
-                            onClick={() => setViewRabModal(item)}
-                            className="border-[3px] border-black bg-black text-[#e5ff00] p-2 hover:bg-[#e5ff00] hover:text-black transition-colors shadow-[2px_2px_0_0_#000]"
-                            title="LIHAT RAB"
-                          >
-                            <Eye className="w-6 h-6" />
-                          </button>
+                        {isExpanded && (
+                          <div className="mb-8">
+                            {renderTable(group.items)}
+                          </div>
                         )}
                       </div>
-                    </td>
-                    <td className="p-6 border-r-[4px] border-black text-3xl font-black uppercase bg-[#00ff88] whitespace-nowrap">
-                      RP {item.sisaAnggaran.toLocaleString('id-ID')}
-                    </td>
-                    <td className="p-6 border-r-[4px] border-black">
-                      <span className="inline-block border-[4px] border-black px-4 py-2 text-lg font-black uppercase bg-white shadow-[4px_4px_0_0_#000]">
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="p-6 text-right h-full align-middle">
-                      <div className="flex flex-col items-end justify-center gap-3 min-h-[120px]">
-                        {session?.user?.role === "user" && (
-                          <>
-                            <button onClick={() => openEditModal(item)} className="border-[4px] border-black bg-white text-black px-6 py-2 text-lg font-black uppercase hover:bg-black hover:text-[#e5ff00] transition-colors shadow-[4px_4px_0_0_#000] group">
-                              <Pencil className="w-6 h-6 mx-auto group-hover:text-[#e5ff00] transition-colors" />
-                            </button>
-                            <button onClick={() => hapusDraft(item._id)} className="border-[4px] border-black bg-black text-[#ff003c] px-6 py-2 hover:bg-[#ff003c] hover:text-black transition-colors shadow-[4px_4px_0_0_#000]" title="HAPUS">
-                              <Trash2 className="w-6 h-6 mx-auto" />
-                            </button>
-                          </>
-                        )}
-                        
-                        {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
-                          <button onClick={() => openValidasiModal(item)} className="border-[4px] border-black bg-black text-[#e5ff00] px-6 py-4 text-xl font-black uppercase hover:bg-[#ff003c] hover:text-white transition-colors shadow-[6px_6px_0_0_#000]">
-                            VALIDASI
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+            return renderTable(data);
+          })()
         )}
       </div>
 

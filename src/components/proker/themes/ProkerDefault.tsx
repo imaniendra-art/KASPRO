@@ -1,6 +1,6 @@
-import { FolderKanban, Loader2, Plus, Send, Trash2, Pencil, CheckCircle, XCircle, MessageSquare, AlertCircle, X, Eye, Info } from "lucide-react";
+import { FolderKanban, Loader2, Plus, Send, Trash2, Pencil, CheckCircle, XCircle, MessageSquare, AlertCircle, X, Eye, Info, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -22,6 +22,37 @@ export default function ProkerDefault(props: any) {
     rab, setRab, handleRabChange, addRabItem, removeRabItem,
     submitting, handleCreate, ajukanKeKeuangan, hapusDraft, handleValidasi, openEditModal
   } = props;
+  
+  const isKetua = session?.user?.role === "ketua";
+
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+
+  const groupedData = useMemo(() => {
+    if (!isKetua || !data) return null;
+    
+    return data.reduce((acc: any, item: any) => {
+      const pengusulInfo = item.pengusulId;
+      const unitName = pengusulInfo?.unitId?.namaUnit || pengusulInfo?.divisi || pengusulInfo?.role || "-";
+      const nama = pengusulInfo?.namaLengkap || "Tanpa Nama";
+      const groupKey = `${nama} (${unitName})`;
+      
+      if (!acc[groupKey]) {
+        acc[groupKey] = {
+          namaLengkap: nama,
+          divisi: unitName,
+          totalProker: 0,
+          totalAnggaran: 0,
+          items: []
+        };
+      }
+      
+      acc[groupKey].items.push(item);
+      acc[groupKey].totalProker += 1;
+      acc[groupKey].totalAnggaran += (item.estimasiAnggaran || 0);
+      
+      return acc;
+    }, {});
+  }, [data, isKetua]);
 
   const [expandedProkerId, setExpandedProkerId] = useState<string | null>(null);
 
@@ -424,235 +455,283 @@ export default function ProkerDefault(props: any) {
             <p>Belum ada program kerja yang dibuat.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Program Kerja</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Deskripsi / Tujuan</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Estimasi Awal</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Sisa Pagu (Valid)</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {data.map((item: any) => {
-                  const isAdminValidating = ["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi";
-                  return (
-                  <React.Fragment key={item._id}>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                    <td className="p-4">
-                      <p className="font-medium text-slate-900 dark:text-white">{item.judul}</p>
-                      {session?.user?.role !== "user" && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          Oleh: {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"})
-                        </p>
-                      )}
-                    </td>
-                    <td className="p-4 text-sm text-slate-500 dark:text-gray-400 max-w-xs">
-                      <div className="truncate" title={item.deskripsi}>{item.deskripsi}</div>
-                      {item.catatan && (
-                        <div className="mt-2 text-xs bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 p-2 rounded-lg border border-amber-200 dark:border-amber-500/20">
-                          <span className="font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Catatan Admin:</span>
-                          {item.catatan}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 font-medium text-slate-500 dark:text-gray-400">
-                      <span>Rp {item.estimasiAnggaran.toLocaleString('id-ID')}</span>
-                    </td>
-                    <td className="p-4 font-bold text-slate-900 dark:text-white">
-                      Rp {item.sisaAnggaran.toLocaleString('id-ID')}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(item.status)}`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right flex items-center justify-end gap-3">
-                      {session?.user?.role === "user" && item.status === "Draft" && (
-                        <>
-                          <button onClick={() => openEditModal(item)} className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1">
-                            <Pencil className="w-4 h-4" /> Edit
-                          </button>
-                          <button onClick={() => hapusDraft(item._id)} className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center gap-1">
-                            <Trash2 className="w-4 h-4" /> Hapus
-                          </button>
-                        </>
-                      )}
-                      {((session?.user?.role === "user" && item.status !== "Draft") || (["admin", "ketua"].includes(session?.user?.role) && item.status !== "Menunggu Validasi")) && (
-                        <button onClick={() => toggleExpanded(item)} className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors">
-                          <Eye className="w-4 h-4" /> {expandedProkerId === item._id ? "Tutup" : "Lihat Rincian"}
-                        </button>
-                      )}
-                      
-                      {isAdminValidating && (
-                        <button onClick={() => toggleExpanded(item)} className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors">
-                          {expandedProkerId === item._id ? "Tutup Rincian" : "Validasi Ajuan"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                  {expandedProkerId === item._id && (
-                    <tr className="bg-slate-50/50 dark:bg-white/[0.01]">
-                      <td colSpan={6} className="p-0 border-b border-slate-200 dark:border-white/10">
-                        <div className="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                          
-                          {/* Rincian Proker */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-[#1a1a1a] p-5 rounded-xl border border-slate-200 dark:border-white/10">
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Capaian</p>
-                              <p className="text-sm text-slate-900 dark:text-white">{item.capaian || "-"}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Base Line & Target</p>
-                              <p className="text-sm text-slate-900 dark:text-white">{item.baseLine || 0}% &rarr; {item.target || 0}%</p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Waktu Pelaksanaan</p>
-                              <p className="text-sm text-slate-900 dark:text-white">{formatWaktuPelaksanaan(item.waktuPelaksanaan)}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sasaran</p>
-                              <p className="text-sm text-slate-900 dark:text-white">{item.sasaran || "-"}</p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Peserta / Mitra</p>
-                              <p className="text-sm text-slate-900 dark:text-white">{item.pesertaMitra || "-"}</p>
-                            </div>
-                          </div>
-
-                          {/* RAB */}
-                          <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
-                            <div className="p-4 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
-                              <h4 className="font-bold text-slate-900 dark:text-white text-sm">Rincian Anggaran Biaya (RAB)</h4>
-                            </div>
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-left text-sm whitespace-nowrap">
-                                <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-gray-400">
-                                  <tr>
-                                    <th className="p-3 font-semibold">Nama Item</th>
-                                    <th className="p-3 font-semibold w-24">Volume</th>
-                                    <th className="p-3 font-semibold w-24">Satuan</th>
-                                    <th className="p-3 font-semibold w-40">Harga Satuan</th>
-                                    <th className="p-3 font-semibold text-right">Total</th>
-                                    {isAdminValidating && <th className="p-3 font-semibold w-10"></th>}
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                                  {valRab?.map((r: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
-                                      <td className="p-3 text-slate-900 dark:text-white">
-                                        {isAdminValidating ? (
-                                          <input type="text" value={r.namaItem} onChange={e => handleValRabChange(idx, 'namaItem', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
-                                        ) : r.namaItem}
-                                      </td>
-                                      <td className="p-3 text-slate-600 dark:text-gray-400">
-                                        {isAdminValidating ? (
-                                          <input type="number" value={r.jumlah} onChange={e => handleValRabChange(idx, 'jumlah', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
-                                        ) : r.jumlah}
-                                      </td>
-                                      <td className="p-3 text-slate-600 dark:text-gray-400">
-                                        {isAdminValidating ? (
-                                          <input type="text" value={r.satuan} onChange={e => handleValRabChange(idx, 'satuan', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
-                                        ) : r.satuan}
-                                      </td>
-                                      <td className="p-3 text-slate-600 dark:text-gray-400">
-                                        {isAdminValidating ? (
-                                          <input type="number" value={r.hargaSatuan} onChange={e => handleValRabChange(idx, 'hargaSatuan', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
-                                        ) : `Rp ${r.hargaSatuan?.toLocaleString('id-ID')}`}
-                                      </td>
-                                      <td className="p-3 font-medium text-slate-900 dark:text-white text-right">Rp {r.total?.toLocaleString('id-ID')}</td>
-                                      {isAdminValidating && (
-                                        <td className="p-3">
-                                          <button onClick={() => removeValRabItem(idx)} className="text-red-400 hover:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
-                                            <Trash2 className="w-4 h-4" />
-                                          </button>
-                                        </td>
-                                      )}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                                <tfoot className="bg-slate-50 dark:bg-black/20">
-                                  <tr>
-                                    <td colSpan={4} className="p-3 text-right font-bold text-slate-600 dark:text-gray-400">Total RAB{isAdminValidating ? ' (Otomatis)' : ''}:</td>
-                                    <td className="p-3 text-right font-bold text-blue-600 dark:text-blue-400">
-                                      Rp {valAnggaran?.toLocaleString('id-ID')}
-                                    </td>
-                                    {isAdminValidating && <td></td>}
-                                  </tr>
-                                </tfoot>
-                              </table>
-                            </div>
-                          </div>
-
-                          {/* Validasi Form */}
-                          {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
-                            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-xl border border-blue-100 dark:border-blue-900/30">
-                              <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
-                                <FolderKanban className="w-4 h-4 text-blue-500" /> Form Validasi
-                              </h4>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Sesuaikan Nominal</label>
-                                  <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">Rp</span>
-                                    <input 
-                                      type="number" 
-                                      value={valAnggaran} 
-                                      onChange={e => setValAnggaran(Number(e.target.value))}
-                                      className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-sm"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
-                                    <MessageSquare className="w-4 h-4" /> Catatan Admin
-                                  </label>
-                                  <input 
-                                    type="text"
-                                    value={valCatatan}
-                                    onChange={e => setValCatatan(e.target.value)}
-                                    placeholder="Alasan ditolak / direvisi..."
-                                    className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                                  />
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-blue-200/50 dark:border-blue-800/30">
-                                <button 
-                                  onClick={() => submitValidasi(item._id, "Draft")}
-                                  className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 rounded-xl text-sm font-medium transition-colors"
-                                >
-                                  <AlertCircle className="w-4 h-4" /> Kembalikan
-                                </button>
-                                <button 
-                                  onClick={() => submitValidasi(item._id, "Ditolak")}
-                                  className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 rounded-xl text-sm font-medium transition-colors"
-                                >
-                                  <XCircle className="w-4 h-4" /> Tolak
-                                </button>
-                                <button 
-                                  onClick={() => submitValidasi(item._id, "Divalidasi Keuangan")}
-                                  className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 rounded-xl text-sm font-medium transition-colors"
-                                >
-                                  <CheckCircle className="w-4 h-4" /> ACC Proker
-                                </button>
-                              </div>
+          (() => {
+            const renderTable = (tableData: any[]) => (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Program Kerja</th>
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Deskripsi / Tujuan</th>
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Estimasi Awal</th>
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Sisa Pagu (Valid)</th>
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="p-4 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {tableData.map((item: any) => {
+                      const isAdminValidating = ["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi";
+                      return (
+                      <React.Fragment key={item._id}>
+                      <tr className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                        <td className="p-4">
+                          <p className="font-medium text-slate-900 dark:text-white">{item.judul}</p>
+                          {session?.user?.role !== "user" && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              Oleh: {item.pengusulId?.namaLengkap} ({item.pengusulId?.unitId?.namaUnit || item.pengusulId?.divisi || item.pengusulId?.role || "-"})
+                            </p>
+                          )}
+                        </td>
+                        <td className="p-4 text-sm text-slate-500 dark:text-gray-400 max-w-xs">
+                          <div className="truncate" title={item.deskripsi}>{item.deskripsi}</div>
+                          {item.catatan && (
+                            <div className="mt-2 text-xs bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 p-2 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                              <span className="font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Catatan Admin:</span>
+                              {item.catatan}
                             </div>
                           )}
+                        </td>
+                        <td className="p-4 font-medium text-slate-500 dark:text-gray-400">
+                          <span>Rp {item.estimasiAnggaran.toLocaleString('id-ID')}</span>
+                        </td>
+                        <td className="p-4 font-bold text-slate-900 dark:text-white">
+                          Rp {item.sisaAnggaran.toLocaleString('id-ID')}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(item.status)}`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right flex items-center justify-end gap-3">
+                          {session?.user?.role === "user" && item.status === "Draft" && (
+                            <>
+                              <button onClick={() => openEditModal(item)} className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1">
+                                <Pencil className="w-4 h-4" /> Edit
+                              </button>
+                              <button onClick={() => hapusDraft(item._id)} className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center gap-1">
+                                <Trash2 className="w-4 h-4" /> Hapus
+                              </button>
+                            </>
+                          )}
+                          {((session?.user?.role === "user" && item.status !== "Draft") || (["admin", "ketua"].includes(session?.user?.role) && item.status !== "Menunggu Validasi")) && (
+                            <button onClick={() => toggleExpanded(item)} className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                              <Eye className="w-4 h-4" /> {expandedProkerId === item._id ? "Tutup" : "Lihat Rincian"}
+                            </button>
+                          )}
+                          
+                          {isAdminValidating && (
+                            <button onClick={() => toggleExpanded(item)} className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium flex items-center gap-1 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors">
+                              {expandedProkerId === item._id ? "Tutup Rincian" : "Validasi Ajuan"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {expandedProkerId === item._id && (
+                        <tr className="bg-slate-50/50 dark:bg-white/[0.01]">
+                          <td colSpan={6} className="p-0 border-b border-slate-200 dark:border-white/10">
+                            <div className="p-6 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                              
+                              {/* Rincian Proker */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-[#1a1a1a] p-5 rounded-xl border border-slate-200 dark:border-white/10">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Capaian</p>
+                                  <p className="text-sm text-slate-900 dark:text-white">{item.capaian || "-"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Base Line & Target</p>
+                                  <p className="text-sm text-slate-900 dark:text-white">{item.baseLine || 0}% &rarr; {item.target || 0}%</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Waktu Pelaksanaan</p>
+                                  <p className="text-sm text-slate-900 dark:text-white">{formatWaktuPelaksanaan(item.waktuPelaksanaan)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sasaran</p>
+                                  <p className="text-sm text-slate-900 dark:text-white">{item.sasaran || "-"}</p>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Peserta / Mitra</p>
+                                  <p className="text-sm text-slate-900 dark:text-white">{item.pesertaMitra || "-"}</p>
+                                </div>
+                              </div>
+
+                              {/* RAB */}
+                              <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+                                <div className="p-4 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">Rincian Anggaran Biaya (RAB)</h4>
+                                </div>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-left text-sm whitespace-nowrap">
+                                    <thead className="bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-gray-400">
+                                      <tr>
+                                        <th className="p-3 font-semibold">Nama Item</th>
+                                        <th className="p-3 font-semibold w-24">Volume</th>
+                                        <th className="p-3 font-semibold w-24">Satuan</th>
+                                        <th className="p-3 font-semibold w-40">Harga Satuan</th>
+                                        <th className="p-3 font-semibold text-right">Total</th>
+                                        {isAdminValidating && <th className="p-3 font-semibold w-10"></th>}
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                                      {valRab?.map((r: any, idx: number) => (
+                                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
+                                          <td className="p-3 text-slate-900 dark:text-white">
+                                            {isAdminValidating ? (
+                                              <input type="text" value={r.namaItem} onChange={e => handleValRabChange(idx, 'namaItem', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                            ) : r.namaItem}
+                                          </td>
+                                          <td className="p-3 text-slate-600 dark:text-gray-400">
+                                            {isAdminValidating ? (
+                                              <input type="number" value={r.jumlah} onChange={e => handleValRabChange(idx, 'jumlah', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                            ) : r.jumlah}
+                                          </td>
+                                          <td className="p-3 text-slate-600 dark:text-gray-400">
+                                            {isAdminValidating ? (
+                                              <input type="text" value={r.satuan} onChange={e => handleValRabChange(idx, 'satuan', e.target.value)} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                            ) : r.satuan}
+                                          </td>
+                                          <td className="p-3 text-slate-600 dark:text-gray-400">
+                                            {isAdminValidating ? (
+                                              <input type="number" value={r.hargaSatuan} onChange={e => handleValRabChange(idx, 'hargaSatuan', Number(e.target.value))} className="w-full bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-blue-500 outline-none px-1 py-1" />
+                                            ) : `Rp ${r.hargaSatuan?.toLocaleString('id-ID')}`}
+                                          </td>
+                                          <td className="p-3 font-medium text-slate-900 dark:text-white text-right">Rp {r.total?.toLocaleString('id-ID')}</td>
+                                          {isAdminValidating && (
+                                            <td className="p-3">
+                                              <button onClick={() => removeValRabItem(idx)} className="text-red-400 hover:text-red-600 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+                                                <Trash2 className="w-4 h-4" />
+                                              </button>
+                                            </td>
+                                          )}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                    <tfoot className="bg-slate-50 dark:bg-black/20">
+                                      <tr>
+                                        <td colSpan={4} className="p-3 text-right font-bold text-slate-600 dark:text-gray-400">Total RAB{isAdminValidating ? ' (Otomatis)' : ''}:</td>
+                                        <td className="p-3 text-right font-bold text-blue-600 dark:text-blue-400">
+                                          Rp {valAnggaran?.toLocaleString('id-ID')}
+                                        </td>
+                                        {isAdminValidating && <td></td>}
+                                      </tr>
+                                    </tfoot>
+                                  </table>
+                                </div>
+                              </div>
+
+                              {/* Validasi Form */}
+                              {["admin", "ketua"].includes(session?.user?.role) && item.status === "Menunggu Validasi" && (
+                                <div className="bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                  <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
+                                    <FolderKanban className="w-4 h-4 text-blue-500" /> Form Validasi
+                                  </h4>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                      <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Sesuaikan Nominal</label>
+                                      <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">Rp</span>
+                                        <input 
+                                          type="number" 
+                                          value={valAnggaran} 
+                                          onChange={e => setValAnggaran(Number(e.target.value))}
+                                          className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-sm"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5 flex items-center gap-1">
+                                        <MessageSquare className="w-4 h-4" /> Catatan Admin
+                                      </label>
+                                      <input 
+                                        type="text"
+                                        value={valCatatan}
+                                        onChange={e => setValCatatan(e.target.value)}
+                                        placeholder="Alasan ditolak / direvisi..."
+                                        className="w-full bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-blue-200/50 dark:border-blue-800/30">
+                                    <button 
+                                      onClick={() => submitValidasi(item._id, "Draft")}
+                                      className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 rounded-xl text-sm font-medium transition-colors"
+                                    >
+                                      <AlertCircle className="w-4 h-4" /> Kembalikan
+                                    </button>
+                                    <button 
+                                      onClick={() => submitValidasi(item._id, "Ditolak")}
+                                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 rounded-xl text-sm font-medium transition-colors"
+                                    >
+                                      <XCircle className="w-4 h-4" /> Tolak
+                                    </button>
+                                    <button 
+                                      onClick={() => submitValidasi(item._id, "Divalidasi Keuangan")}
+                                      className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 rounded-xl text-sm font-medium transition-colors"
+                                    >
+                                      <CheckCircle className="w-4 h-4" /> ACC Proker
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+
+            if (isKetua && groupedData) {
+              return (
+                <div className="flex flex-col">
+                  {Object.entries(groupedData).map(([key, group]: [string, any]) => {
+                    const isExpanded = expandedGroup === key;
+                    return (
+                      <div key={key} className="border-b border-slate-200 dark:border-white/10 last:border-b-0">
+                        <div 
+                          onClick={() => setExpandedGroup(isExpanded ? null : key)}
+                          className="flex justify-between items-center p-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                              {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-slate-900 dark:text-white">{group.namaLengkap}</p>
+                              <p className="text-sm text-slate-500 dark:text-gray-400">{group.divisi}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">Total Proker</p>
+                              <p className="text-slate-900 dark:text-white font-semibold">{group.totalProker}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">Total Anggaran (Estimasi)</p>
+                              <p className="text-slate-900 dark:text-white font-bold text-lg">Rp {group.totalAnggaran.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  )}
-                  </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {isExpanded && (
+                          <div className="bg-slate-50/50 dark:bg-white/[0.01]">
+                            {renderTable(group.items)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+            return renderTable(data);
+          })()
         )}
       </div>
 

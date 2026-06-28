@@ -23,7 +23,6 @@ export default function PengajuanDetailDefault(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
-    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti,
     editedRab, handleEditRabItem, handleDeleteRabItem
   } = props;
@@ -101,14 +100,14 @@ export default function PengajuanDetailDefault(props: any) {
                     <th className="pb-3 text-sm font-medium text-slate-500 dark:text-gray-400">Jml</th>
                     <th className="pb-3 text-sm font-medium text-slate-500 dark:text-gray-400">Harga Satuan</th>
                     <th className="pb-3 text-sm font-medium text-slate-500 dark:text-gray-400 text-right">Total</th>
-                    {isAdmin && <th className="pb-3 text-sm font-medium text-slate-500 dark:text-gray-400 w-10"></th>}
+                    {(isAdmin || isKetua) && <th className="pb-3 text-sm font-medium text-slate-500 dark:text-gray-400 w-10"></th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {(editedRab || p.rab).map((item: any, i: number) => (
                     <tr key={i}>
                       <td className="py-3 text-sm font-medium text-slate-900 dark:text-white">
-                        {isAdmin ? (
+                        {(isAdmin || isKetua) ? (
                           <input type="text" value={item.namaItem} onChange={(e) => handleEditRabItem(i, 'namaItem', e.target.value)} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                         ) : (
                           item.namaItem
@@ -120,9 +119,9 @@ export default function PengajuanDetailDefault(props: any) {
                         )}
                       </td>
                       <td className="py-3 text-slate-600 dark:text-gray-300 text-sm">
-                        {isAdmin ? (
+                        {(isAdmin || isKetua) ? (
                           <div className="flex items-center gap-1">
-                            <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} className="w-16 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                            <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-16 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                             <input type="text" value={item.satuan} onChange={(e) => handleEditRabItem(i, 'satuan', e.target.value)} className="w-16 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="pcs" />
                           </div>
                         ) : (
@@ -130,14 +129,14 @@ export default function PengajuanDetailDefault(props: any) {
                         )}
                       </td>
                       <td className="py-3 text-slate-600 dark:text-gray-300 text-sm">
-                        {isAdmin ? (
-                          <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} className="w-24 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        {(isAdmin || isKetua) ? (
+                          <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-24 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                         ) : (
                           `Rp ${item.hargaSatuan.toLocaleString("id-ID")}`
                         )}
                       </td>
                       <td className="py-3 font-semibold text-slate-900 dark:text-white text-sm text-right">Rp {item.total.toLocaleString("id-ID")}</td>
-                      {isAdmin && (
+                      {(isAdmin || isKetua) && (
                         <td className="py-3 text-right">
                           <button onClick={() => handleDeleteRabItem(i)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded">
                             <Trash2 className="w-4 h-4" />
@@ -236,6 +235,7 @@ export default function PengajuanDetailDefault(props: any) {
                         type="number" 
                         value={nominalDisetujui || p.totalNominal}
                         onChange={e => setNominalDisetujui(Number(e.target.value))}
+                        onWheel={(e) => e.currentTarget.blur()}
                         className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl py-2 pl-8 pr-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -282,25 +282,6 @@ export default function PengajuanDetailDefault(props: any) {
                   </div>
                 )}
 
-                {/* Switch Pagu Master for Admin Keuangan if it's not a proker */}
-                {isAdmin && !p.prokerId && (needsAdminAction || needsCairAction) && (
-                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Gunakan Dana Pagu Master?</span>
-                      <span className="text-xs text-slate-500 dark:text-gray-400">Pilih 'Ya' untuk memotong saldo utama KASPRO.</span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="sr-only peer" 
-                        checked={potongPaguMaster}
-                        onChange={(e) => setPotongPaguMaster(e.target.checked)}
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                      <span className="ml-3 text-sm font-medium text-slate-900 dark:text-gray-300 w-8">{potongPaguMaster ? 'Ya' : 'Tidak'}</span>
-                    </label>
-                  </div>
-                )}
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {needsAdminAction && (

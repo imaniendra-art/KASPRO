@@ -48,7 +48,6 @@ export default function DetailPengajuan() {
   const [catatanAdmin, setCatatanAdmin] = useState("");
   const [catatanUser, setCatatanUser] = useState("");
   const [nominalDisetujui, setNominalDisetujui] = useState<number>(0);
-  const [potongPaguMaster, setPotongPaguMaster] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editedRab, setEditedRab] = useState<any[]>([]);
 
@@ -70,7 +69,7 @@ export default function DetailPengajuan() {
         catatanAdmin,
         catatanUser,
         totalDisetujui: nominalDisetujui || data.data.totalNominal,
-        potongPaguMaster,
+        potongPaguMaster: !!data.data.prokerId,
         rab: editedRab
       };
 
@@ -170,7 +169,6 @@ export default function DetailPengajuan() {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
-    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti, getStatusColor,
     editedRab, handleEditRabItem, handleDeleteRabItem
   };

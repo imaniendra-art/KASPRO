@@ -81,7 +81,7 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
   ];
 
   const userCards = [
-    { title: "Rencana Proker", value: `Rp ${stats?.rencanaProker?.toLocaleString('id-ID') || "0"}`, icon: FileText, color: "from-blue-500 to-cyan-500" },
+    { title: "Rencana Proker", value: `Rp ${stats?.rencanaProker?.toLocaleString('id-ID') || "0"}`, subtitle: `Dana Proker Cair: Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: FileText, color: "from-blue-500 to-cyan-500" },
     { title: "Total Diajukan", value: `Rp ${stats?.totalDiajukan?.toLocaleString('id-ID') || "0"}`, icon: List, color: "from-orange-500 to-amber-500" },
     { title: "Dana Proker Cair", value: `Rp ${stats?.danaCair?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-emerald-500 to-teal-500" },
     { title: "Dana Non-Pagu Cair", value: `Rp ${stats?.danaCairNonPagu?.toLocaleString('id-ID') || "0"}`, icon: CheckSquare, color: "from-red-500 to-rose-500" },
@@ -104,12 +104,15 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {cardsToRender.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-blue-500/30 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none">
+          <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2rem] p-8 backdrop-blur-md relative overflow-hidden group hover:border-blue-500/30 dark:hover:border-white/20 transition-all duration-300 shadow-sm dark:shadow-none flex flex-col">
             <div className={`absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${stat.color} rounded-full blur-[60px] opacity-10 dark:opacity-20 group-hover:opacity-20 dark:group-hover:opacity-40 transition-opacity`}></div>
-            <div className="relative z-10 flex items-start justify-between">
+            <div className="relative z-10 flex items-start justify-between flex-1">
               <div>
                 <p className="text-base font-medium text-slate-500 dark:text-gray-400 mb-2">{stat.title}</p>
                 <h3 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">{stat.value}</h3>
+                {stat.subtitle && (
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-2">{stat.subtitle}</p>
+                )}
               </div>
               <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.color} bg-opacity-10 text-white shadow-lg transform group-hover:scale-110 transition-transform duration-300`}>
                 <stat.icon className="w-6 h-6" />
@@ -270,15 +273,27 @@ export default function DashboardDefault({ session, stats }: { session: any, sta
                       </td>
                       <td className="p-4 text-center">
                         {item.buktiLpj ? (
-                          <a 
-                            href={item.buktiLpj} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (item.buktiLpj.startsWith('data:')) {
+                                const w = window.open("");
+                                if (w) {
+                                  if (item.buktiLpj.startsWith('data:application/pdf')) {
+                                    w.document.write(`<iframe src="${item.buktiLpj}" width="100%" height="100%" style="border:none;"></iframe>`);
+                                  } else {
+                                    w.document.write(`<img src="${item.buktiLpj}" style="max-width:100%; margin:auto; display:block;"/>`);
+                                  }
+                                }
+                              } else {
+                                window.open(item.buktiLpj, '_blank');
+                              }
+                            }}
                             className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20 rounded-lg transition-colors inline-flex"
                             title="Lihat Bukti"
                           >
                             <FileText className="w-4 h-4" />
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-slate-400 dark:text-gray-600">-</span>
                         )}

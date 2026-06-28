@@ -11,8 +11,6 @@ export default function PengajuanDetailBrutalism(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
-
-    potongPaguMaster, setPotongPaguMaster,
     isSubmitting, handleAction, handleUploadBukti,
     editedRab, handleEditRabItem, handleDeleteRabItem
   } = props;
@@ -95,7 +93,7 @@ export default function PengajuanDetailBrutalism(props: any) {
                   {(editedRab || p.rab).map((item: any, i: number) => (
                     <tr key={i} className="hover:bg-slate-100">
                       <td className="py-4 pr-4 border-r-[4px] border-black text-xl font-bold text-black uppercase">
-                        {isAdmin ? (
+                        {(isAdmin || isKetua) ? (
                           <input type="text" value={item.namaItem} onChange={(e) => handleEditRabItem(i, 'namaItem', e.target.value)} className="w-full bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
                         ) : (
                           item.namaItem
@@ -107,9 +105,9 @@ export default function PengajuanDetailBrutalism(props: any) {
                         )}
                       </td>
                       <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">
-                        {isAdmin ? (
+                        {(isAdmin || isKetua) ? (
                           <div className="flex items-center gap-2">
-                            <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} className="w-20 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
+                            <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-20 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
                             <input type="text" value={item.satuan} onChange={(e) => handleEditRabItem(i, 'satuan', e.target.value)} className="w-20 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" placeholder="pcs" />
                           </div>
                         ) : (
@@ -117,8 +115,8 @@ export default function PengajuanDetailBrutalism(props: any) {
                         )}
                       </td>
                       <td className="py-4 px-4 border-r-[4px] border-black text-xl font-bold text-black uppercase whitespace-nowrap">
-                        {isAdmin ? (
-                          <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} className="w-32 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
+                        {(isAdmin || isKetua) ? (
+                          <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-32 bg-white border-[4px] border-black px-2 py-1 focus:outline-none" />
                         ) : (
                           `RP ${item.hargaSatuan.toLocaleString("id-ID")}`
                         )}
@@ -217,6 +215,7 @@ export default function PengajuanDetailBrutalism(props: any) {
                         type="number" 
                         value={nominalDisetujui || p.totalNominal}
                         onChange={e => setNominalDisetujui(Number(e.target.value))}
+                        onWheel={(e) => e.currentTarget.blur()}
                         className="w-full bg-white border-[4px] border-black py-3 pl-14 pr-4 text-xl font-bold text-black focus:outline-none focus:bg-black focus:text-[#ffffff] transition-colors"
                       />
                     </div>
@@ -263,21 +262,6 @@ export default function PengajuanDetailBrutalism(props: any) {
                   </div>
                 )}
 
-                {/* Checkbox Pagu Master for Admin Keuangan if it's not a proker */}
-                {isAdmin && !p.prokerId && (needsAdminAction || needsCairAction) && (
-                  <div className="flex items-center gap-3 p-4 border-[4px] border-black bg-white">
-                    <input 
-                      type="checkbox" 
-                      id="potongPagu"
-                      checked={potongPaguMaster}
-                      onChange={(e) => setPotongPaguMaster(e.target.checked)}
-                      className="w-6 h-6 border-[4px] border-black appearance-none bg-white checked:bg-black cursor-pointer relative"
-                    />
-                    <label htmlFor="potongPagu" className="font-black uppercase text-sm cursor-pointer select-none flex-1">
-                      AMBIL DANA DARI PAGU MASTER KASPRO? <span className="text-[#ff003c]">({potongPaguMaster ? 'YA' : 'TIDAK'})</span>
-                    </label>
-                  </div>
-                )}
 
                 <div className="flex flex-col gap-3">
                   {needsAdminAction && (

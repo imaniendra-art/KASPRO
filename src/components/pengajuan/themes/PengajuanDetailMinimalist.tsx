@@ -10,7 +10,6 @@ export default function PengajuanDetailMinimalist(props: any) {
     catatanAdmin, setCatatanAdmin,
     catatanUser, setCatatanUser,
     nominalDisetujui, setNominalDisetujui,
-    potongPaguMaster, setPotongPaguMaster,
 
     isSubmitting, handleAction, handleUploadBukti,
     editedRab, handleEditRabItem, handleDeleteRabItem
@@ -50,23 +49,23 @@ export default function PengajuanDetailMinimalist(props: any) {
               <th className="p-3">Jumlah</th>
               <th className="p-3">Harga Satuan</th>
               <th className="p-3">Total</th>
-              {isAdmin && <th className="p-3 w-10"></th>}
+              {(isAdmin || isKetua) && <th className="p-3 w-10"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {(editedRab || p.rab)?.map((item: any, i: number) => (
               <tr key={i}>
                 <td className="p-3 text-gray-900 dark:text-gray-100">
-                  {isAdmin ? (
+                  {(isAdmin || isKetua) ? (
                     <input type="text" value={item.namaItem} onChange={(e) => handleEditRabItem(i, 'namaItem', e.target.value)} className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                   ) : (
                     item.namaItem
                   )}
                 </td>
                 <td className="p-3 text-gray-500 dark:text-gray-400">
-                  {isAdmin ? (
+                  {(isAdmin || isKetua) ? (
                     <div className="flex items-center gap-1">
-                      <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} className="w-16 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      <input type="number" min="1" value={item.jumlah} onChange={(e) => handleEditRabItem(i, 'jumlah', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-16 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       <input type="text" value={item.satuan} onChange={(e) => handleEditRabItem(i, 'satuan', e.target.value)} className="w-16 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="pcs" />
                     </div>
                   ) : (
@@ -74,14 +73,14 @@ export default function PengajuanDetailMinimalist(props: any) {
                   )}
                 </td>
                 <td className="p-3 text-gray-500 dark:text-gray-400">
-                  {isAdmin ? (
-                    <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} className="w-24 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  {(isAdmin || isKetua) ? (
+                    <input type="number" value={item.hargaSatuan} onChange={(e) => handleEditRabItem(i, 'hargaSatuan', e.target.value)} onWheel={(e) => e.currentTarget.blur()} className="w-24 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                   ) : (
                     `Rp ${item.hargaSatuan?.toLocaleString('id-ID')}`
                   )}
                 </td>
                 <td className="p-3 text-gray-900 dark:text-gray-100 font-medium">Rp {item.total?.toLocaleString('id-ID')}</td>
-                {isAdmin && (
+                {(isAdmin || isKetua) && (
                   <td className="p-3 text-right">
                     <button onClick={() => handleDeleteRabItem(i)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded">
                       <Trash2 className="w-4 h-4" />
@@ -128,6 +127,7 @@ export default function PengajuanDetailMinimalist(props: any) {
                   type="number" 
                   value={nominalDisetujui || p.totalNominal}
                   onChange={e => setNominalDisetujui(Number(e.target.value))}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full sm:w-1/2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -165,20 +165,7 @@ export default function PengajuanDetailMinimalist(props: any) {
                 </div>
               )}
 
-              {isAdmin && !p.prokerId && (
-                <div className="flex items-center gap-3 mt-2">
-                  <input 
-                    type="checkbox" 
-                    id="potongPagu"
-                    checked={potongPaguMaster}
-                    onChange={(e) => setPotongPaguMaster(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="potongPagu" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Potong Dana dari Pagu Master KASPRO
-                  </label>
-                </div>
-              )}
+
             </div>
           )}
 

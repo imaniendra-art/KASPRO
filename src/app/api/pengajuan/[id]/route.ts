@@ -55,7 +55,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     await connectToDatabase();
 
-    const pengajuan = await Pengajuan.findById(id);
+    const pengajuan = await Pengajuan.findById(id).populate({
+      path: "pengusulId",
+      populate: { path: "unitId", select: "namaUnit" }
+    });
     if (!pengajuan) return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
 
     // Handle budget deduction on 'Dicairkan'
@@ -65,8 +68,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       // Deduct from PeriodeAnggaran Global (if potongPaguMaster is true or undefined/default true)
       // For Proker, we usually always want to deduct Pagu Master.
       // But we will respect the frontend's choice if passed.
-      const shouldDeductPagu = potongPaguMaster !== false;
-
+      const shouldDeductPagu = pengajuan.potongPaguMaster !== false && pengajuan.prokerId;
       if (shouldDeductPagu) {
         const activePeriode = await PeriodeAnggaran.findOne({ isActive: true });
         if (activePeriode) {
@@ -86,22 +88,54 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     // Update Pengajuan
-    if (status) pengajuan.status = status;
+    if (status) {
+      if (status === "Dicairkan") {
+        pengajuan.status = "Diproses Keuangan";
+      } else {
+        pengajuan.status = status;
+      }
+    }
     if (totalDisetujui !== undefined) pengajuan.totalDisetujui = totalDisetujui;
     if (potongPaguMaster !== undefined) pengajuan.potongPaguMaster = potongPaguMaster;
     if (rab) pengajuan.rab = rab;
     await pengajuan.save();
 
+    // Trigger FINARA Integration if status becomes "Dicairkan" (which we just set to Diproses Keuangan)
+    if (status === "Dicairkan" || pengajuan.status === "Diproses Keuangan") {
+      try {
+        const finaraUrl = process.env.FINARA_URL || "http://localhost:3000";
+        await fetch(`${finaraUrl}/api/integrations/kaspro`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.KASPRO_API_SECRET}`
+          },
+          body: JSON.stringify({
+            action: "create_draft",
+            kasproId: pengajuan._id.toString(),
+            judul: pengajuan.judul,
+            nominal: pengajuan.totalDisetujui > 0 ? pengajuan.totalDisetujui : pengajuan.totalNominal,
+            tanggal: new Date().toISOString(),
+            // @ts-ignore
+            pengusul: pengajuan.pengusulId ? `${pengajuan.pengusulId.namaLengkap} (${pengajuan.pengusulId.unitId?.namaUnit || pengajuan.pengusulId.divisi || pengajuan.pengusulId.role || "User"})` : "Sistem"
+          })
+        });
+      } catch (err) {
+        console.error("Gagal mengirim draft ke FINARA:", err);
+      }
+    }
+
     // Create Approval Log
     if (aksi) {
+      const logAksi = aksi === "Dicairkan" ? "Dicairkan - Diproses Keuangan" : aksi;
       const logs = [];
       // Create logs based on notes provided
-      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanAdmin, tujuanCatatan: 'admin' });
-      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUser, tujuanCatatan: 'user' });
-      if (catatanUmum) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, catatan: catatanUmum, tujuanCatatan: 'umum' });
+      if (catatanAdmin) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi: logAksi, catatan: catatanAdmin, tujuanCatatan: 'admin' });
+      if (catatanUser) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi: logAksi, catatan: catatanUser, tujuanCatatan: 'user' });
+      if (catatanUmum) logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi: logAksi, catatan: catatanUmum, tujuanCatatan: 'umum' });
 
       if (logs.length === 0) {
-        logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi, tujuanCatatan: 'umum' });
+        logs.push({ pengajuanId: pengajuan._id, userId: session.user.id, role: session.user.role, aksi: logAksi, tujuanCatatan: 'umum' });
       }
 
       await ApprovalLog.insertMany(logs);

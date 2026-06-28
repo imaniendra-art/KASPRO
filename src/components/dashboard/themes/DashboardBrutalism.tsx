@@ -113,6 +113,11 @@ export default function DashboardBrutalism({ session, stats }: { session: any, s
           <div className="text-7xl font-black tracking-tighter leading-none text-balance break-all">
             Rp {isUser ? (stats?.rencanaProker?.toLocaleString('id-ID') || "0") : (stats?.sisaKas?.toLocaleString('id-ID') || "0")}
           </div>
+          {isUser && (
+            <div className="mt-4 text-sm font-black uppercase bg-[#e5ff00] text-black inline-block px-3 py-1 border-[2px] border-black shadow-[2px_2px_0_0_#000]">
+              Dana Proker yang Cair: Rp {stats?.danaCair?.toLocaleString('id-ID') || "0"}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 border-t-[4px] border-black pt-8 mb-16">
@@ -262,9 +267,26 @@ export default function DashboardBrutalism({ session, stats }: { session: any, s
                         </td>
                         <td className="p-3 text-center">
                           {item.buktiLpj ? (
-                            <a href={item.buktiLpj} target="_blank" rel="noopener noreferrer" className="inline-block border-[2px] border-black bg-white px-2 py-1 font-black uppercase hover:bg-black hover:text-[#e5ff00] transition-colors text-xs">
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (item.buktiLpj.startsWith('data:')) {
+                                  const w = window.open("");
+                                  if (w) {
+                                    if (item.buktiLpj.startsWith('data:application/pdf')) {
+                                      w.document.write(`<iframe src="${item.buktiLpj}" width="100%" height="100%" style="border:none;"></iframe>`);
+                                    } else {
+                                      w.document.write(`<img src="${item.buktiLpj}" style="max-width:100%; margin:auto; display:block;"/>`);
+                                    }
+                                  }
+                                } else {
+                                  window.open(item.buktiLpj, '_blank');
+                                }
+                              }}
+                              className="inline-block border-[2px] border-black bg-white px-2 py-1 font-black uppercase hover:bg-black hover:text-[#e5ff00] transition-colors text-xs"
+                            >
                               LIHAT BUKTI
-                            </a>
+                            </button>
                           ) : (
                             <span className="font-bold">-</span>
                           )}

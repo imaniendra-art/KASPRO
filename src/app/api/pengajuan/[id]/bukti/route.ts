@@ -41,15 +41,34 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     pengajuan.buktiLpj = buktiUrl;
-    pengajuan.status = "Selesai";
+    pengajuan.status = "LPJ Diperiksa";
     await pengajuan.save();
+
+    // Trigger FINARA post_draft
+    try {
+      const finaraUrl = process.env.FINARA_URL || "http://localhost:3000";
+      await fetch(`${finaraUrl}/api/integrations/kaspro`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.KASPRO_API_SECRET}`
+        },
+        body: JSON.stringify({
+          action: "post_draft",
+          kasproId: pengajuan._id.toString(),
+          buktiUrl: buktiUrl
+        })
+      });
+    } catch (err) {
+      console.error("Gagal mengirim post_draft ke FINARA:", err);
+    }
 
     await ApprovalLog.create({
       pengajuanId: id,
       userId: session.user.id,
       role: session.user.role,
       aksi: "Upload Bukti",
-      catatan: "Bukti telah diunggah. Pengajuan dinyatakan Selesai.",
+      catatan: "Bukti telah diunggah. Menunggu verifikasi dari Keuangan.",
       tujuanCatatan: "umum"
     });
 
