@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KASPRO (Sistem Manajemen Pengajuan Kas & Program Kerja)
 
-## Getting Started
+KASPRO adalah aplikasi berbasis web yang dirancang untuk memudahkan proses pengajuan dana untuk Program Kerja (Proker) maupun pengajuan dana operasional lainnya. Aplikasi ini terintegrasi dengan Finara dan dibangun menggunakan Next.js, MongoDB, dan Tailwind CSS.
 
-First, run the development server:
+## 🚀 Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Manajemen Program Kerja (Proker):** Pengelolaan pagu anggaran dan detail program kerja.
+- **Pengajuan Dana (RAB):** Pembuatan Rencana Anggaran Biaya (RAB) yang terperinci.
+- **Alur Persetujuan Bertingkat:** Proses *review* mulai dari Admin, persetujuan Ketua, hingga pencairan oleh bagian Keuangan.
+- **Laporan Pertanggungjawaban (LPJ):** Fasilitas unggah bukti pengeluaran untuk setiap pengajuan yang telah dicairkan.
+- **Integrasi Finara:** Sinkronisasi data keuangan/pencairan.
+- **Kustomisasi Tema Tampilan:** Pilihan antarmuka pengguna (Minimalist, Brutalism, dan Default).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📖 Tutorial Penggunaan KASPRO (User Guide)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Berikut adalah alur standar penggunaan sistem KASPRO untuk pengguna:
 
-## Learn More
+### 1. Membuat Pengajuan Baru
+- Login ke dalam sistem menggunakan akun yang telah terdaftar.
+- Navigasi ke menu **Pengajuan** (atau melalui menu **Program Kerja** jika pengajuan terikat pada proker tertentu).
+- Klik tombol **Buat Pengajuan**.
+- Isi formulir pengajuan dengan detail berikut:
+  - **Judul & Deskripsi:** Penjelasan singkat dan jelas mengenai tujuan penggunaan dana.
+  - **Program Kerja (Opsional):** Pilih proker yang menaungi pengajuan ini.
+  - **RAB (Rencana Anggaran Biaya):** Tambahkan item per item yang dibutuhkan, termasuk **Nama Item**, **Jumlah**, **Satuan**, dan **Harga Satuan**. Sistem akan menghitung total secara otomatis.
+- Klik simpan/kirim. Pengajuan Anda akan masuk dengan status awal `Review Admin`.
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Memantau Alur Persetujuan (Approval Workflow)
+Pengajuan Anda akan diproses melalui beberapa tahapan. Anda bisa memantaunya di dashboard:
+1. **Review Admin:** Admin memeriksa kelengkapan administratif pengajuan.
+2. **Menunggu Ketua:** Setelah lolos verifikasi Admin, Ketua akan meninjau untuk memberikan persetujuan final (ACC).
+3. **Diproses Keuangan:** Pengajuan yang disetujui akan masuk ke bagian Keuangan untuk persiapan dana.
+4. **Dicairkan:** Dana telah ditransfer atau diserahkan kepada pihak pengusul.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Pelaporan & LPJ (Laporan Pertanggungjawaban)
+Setelah kegiatan selesai dilaksanakan dan dana digunakan:
+- Buka halaman detail pengajuan Anda yang berstatus `Dicairkan`.
+- Unggah file bukti kuitansi atau nota pengeluaran pada bagian unggah **Bukti LPJ**.
+- Status pengajuan akan berubah menjadi `LPJ Diperiksa`.
+- Setelah bagian keuangan/admin memvalidasi bukti tersebut, pengajuan akan ditutup dengan status `Selesai`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Panduan Instalasi & Pengembangan (Developer)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Jika Anda adalah pengembang yang ingin menjalankan proyek ini secara lokal:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Prasyarat
+- Node.js (Minimal versi 18.x)
+- MongoDB Database (Lokal atau Atlas)
+
+### Langkah-langkah Menjalankan Proyek
+1. Clone repositori ini ke komputer lokal:
+   ```bash
+   git clone https://github.com/stimi-yapmim/kaspro.git
+   cd kaspro
+   ```
+2. Instal semua dependensi yang dibutuhkan:
+   ```bash
+   npm install
+   ```
+3. Konfigurasi Environment Variables. Buat file `.env` di direktori utama proyek dan sesuaikan dengan environment Anda:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/kaspro_db
+   NEXTAUTH_SECRET=buat_secret_key_anda_disini
+   NEXTAUTH_URL=http://localhost:3010
+   ```
+4. Jalankan mode pengembangan (*development*):
+   ```bash
+   npm run dev
+   ```
+5. Akses aplikasi melalui browser di URL: `http://localhost:3010`
+
+---
+*Dokumentasi ini akan terus diperbarui seiring dengan perkembangan fitur aplikasi KASPRO.*
